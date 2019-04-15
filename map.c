@@ -262,6 +262,8 @@ int main( int argc, char **argv ) {
     krnl_set_current_mod( mod );
 
     romlib_install_thunks();
+    tracehub_fake_probe();
+    tracehub_rs1_install();
 
     start_thread(0);
     

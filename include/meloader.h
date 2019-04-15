@@ -48,8 +48,8 @@ typedef struct {
 } me_mod;
 
 typedef struct {
-    void (*write)( int addr, const void *buffer, int count );
-    void (*read )( int addr, void *buffer, int count );
+    int (*write)( int addr, const void *buffer, int count );
+    int (*read )( int addr, void *buffer, int count );
 } mmio_periph;
 
 void write_hexn( int v );
@@ -72,5 +72,9 @@ extern me_mod *current_mod;
 
 void krnl_write_seg( int seg, int offset, void *data, size_t count );
 void krnl_read_seg ( int seg, int offset, void *data, size_t count );
+
+void krnl_periph_reg( mmio_periph * periph );
+void tracehub_fake_probe();
+void tracehub_rs1_install();
 
 #endif

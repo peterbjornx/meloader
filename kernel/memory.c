@@ -3,12 +3,13 @@
 //
 #include <string.h>
 #include "meloader.h"
+#include "printf.h"
 
 int peripheral_count = 0;
 mmio_periph *peripheral_list[64];
 
 void krnl_periph_reg( mmio_periph * periph ) {
-
+    peripheral_list[peripheral_count++] = periph;
 }
 
 void krnl_deref_seg( int seg, int offset, size_t count, int *lad ) {
@@ -22,26 +23,26 @@ void krnl_deref_seg( int seg, int offset, size_t count, int *lad ) {
     *lad = current_mod->segments[seg].base + offset;
     return;
 fault:
-    *((int *)NULL) = 0xDEADBEEF;
+    *((volatile int *)NULL) = 0xDEADBEEF;
 }
 
 void krnl_write_seg( int seg, int offset, void *data, size_t count ) {
-    int lad;
+    int lad, v=0;
     krnl_deref_seg( seg, offset, count, &lad );
-    write_str("[mmio] write addr: 0x");
-    write_hex(8, lad);
-    write_str("\n");
     for ( int i = 0; i < peripheral_count; i++ )
-        peripheral_list[i]->write( lad, data, count );
+        v |= peripheral_list[i]->write( lad, data, count );
+    if (!v)
+        mel_printf("[mmio] Unimplemented write addr: 0x%08x count: %i\n", lad, count);
 }
+
 void krnl_read_seg ( int seg, int offset, void *data, size_t count ) {
-    int lad;
+    int lad,v = 0;
     krnl_deref_seg( seg, offset, count, &lad );
-    if ( seg != 0x3b ) {
-        write_str("[mmio] read addr: 0x");
-        write_hex(8, lad);
-        write_str("\n");
-    }
+
     for ( int i = 0; i < peripheral_count; i++ )
-        peripheral_list[i]->read( lad, data, count );
+        v |= peripheral_list[i]->read( lad, data, count );
+    if ( (!v) && seg != 0x3b ) {
+        mel_printf("[mmio] Unimplemented read addr: 0x%08x count: %i\n", lad, count);
+    }
 }
+
