@@ -30,4 +30,6 @@ add_executable(meloader
         syslib/kernelcall.c
         include/syslib.h
         syslib/tls.c
-        syslib/thunks.c periph/sks/sks.c)
+        syslib/thunks.c
+        periph/sks/sks.c
+        periph/spi/spi.c)

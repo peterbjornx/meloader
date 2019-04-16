@@ -32,6 +32,7 @@ void populate_ranges_mod( me_mod *mod, size_t context_size ) {
     man_ext_mmio_ranges *mmios;
     int i;
     void *next_base;
+    uint32_t t;
 
     mod_attr = man_ext_find( mod->met_map, mod->met_size, 10 );
     threads  = man_ext_find( mod->met_map, mod->met_size,  6 );
@@ -52,14 +53,16 @@ void populate_ranges_mod( me_mod *mod, size_t context_size ) {
     mod->num_threads = (threads->length - sizeof(man_ext)) / sizeof(man_thread);
     mod->threads = calloc((size_t) mod->num_threads, sizeof(me_thrd) );
 
+    t = process->main_thread_id;
 
     for ( i = 0; i < mod->num_threads; i++ ) {
         mod->threads[i].stack_size = threads->threads[i].stack_size;
         next_base += 0x1000; /* Guard page below stack ? */
         next_base += mod->threads[i].stack_size;
         mod->threads[i].stack_top = next_base;
+        mod->threads[i].thread_id = t++;
     }
-    mod->threads[0].entry_point = process->main_thread_entry;
+    mod->threads[0].entry_point = (void *) process->main_thread_entry;
 
     mod->num_segments = (mmios->length - sizeof(man_ext)) / sizeof(man_mmio_range);
     mod->segments     = calloc((size_t) mod->num_segments, sizeof(me_seg) );
@@ -239,11 +242,11 @@ me_mod *open_mod( const char *modname, int nomet ) {
     return mod;
 }
 
-
 int main( int argc, char **argv ) {
     char *modname = argv[1];
     char *libname = argv[2];
     char *romname = argv[3];
+    uint32_t main_args[2];
 
     me_mod *mod = open_mod(modname, 0);
     me_mod *romlib = open_mod(romname, 1);
@@ -267,8 +270,12 @@ int main( int argc, char **argv ) {
     tracehub_fake_probe();
     tracehub_rs1_install();
     sks_install();
+    spi_install();
 
-    start_thread(0);
+    main_args[0] = 0;
+    main_args[1] = mod->threads[0].thread_id;
+
+    start_thread(0, main_args, sizeof main_args);
     
     /* TEXT/RODATA | STACK + GUARD | HEAP | BSS | CTX */
 

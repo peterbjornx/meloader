@@ -4,6 +4,7 @@
 
 #include "meloader.h"
 #include <stdio.h>
+#include <string.h>
 
 me_mod *current_mod;
 
@@ -11,16 +12,17 @@ void krnl_set_current_mod(me_mod *mod) {
     current_mod = mod;
 }
 
-void start_thread( int n ) {
+void start_thread( int n, void *args, size_t args_size ) {
     fprintf(stderr,
-            "[info] Starting thread %i: entry = %08x stack = %08x\n",
+            "[info] Starting thread %i: entry = %p stack = %p\n",
             n,
             current_mod->threads[n].entry_point,
             current_mod->threads[n].stack_top);
     uint32_t *tls_self_ptr = (current_mod->threads[n].stack_top - 0x4);
     *tls_self_ptr = (uint32_t) tls_self_ptr;
+    memcpy( current_mod->threads[n].stack_top - 0x14 - args_size, args, args_size );
     switch_stack( current_mod->threads[n].entry_point,
-                  current_mod->threads[n].stack_top - 0x14 );
+                  current_mod->threads[n].stack_top - 0x14 - args_size );
 }
 
 int get_current_thread_id( void ) {

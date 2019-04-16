@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 typedef struct {
+    uint32_t    thread_id;
     void *      stack_top;
     uintptr_t   stack_size;
     void *      entry_point;
@@ -58,13 +59,14 @@ void write_hex(int n,int i);
 
 void write_str(char *s);
 
-        void or_error( int cond, const char *fmt );
+void or_error( int cond, const char *fmt );
 
 void insert_thunk( void *wr, void *target );
 
 void *get_esp( void );
 
 void switch_stack( void *entry, void *s_top );
+void start_thread( int n, void *args, size_t args_size );
 void * get_thread_tls( int i );
 int get_current_thread_id( void );
 void romlib_install_thunks();
@@ -79,4 +81,5 @@ void krnl_periph_reg( mmio_periph * periph );
 void tracehub_fake_probe();
 void tracehub_rs1_install();
 void sks_install();
+void spi_install();
 #endif
