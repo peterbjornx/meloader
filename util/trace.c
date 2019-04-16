@@ -26,7 +26,7 @@ void sven_decode(int master, int channel, int header, int size, char *data) {
     switch( type ) {
         case 2:
             data[size] = 0;
-            mel_printf("[sven] debug_string sev:%02x unit:%02x module:%02x sub:%02x \"%s\"\n", severity, unit, module,subtype, data);
+            mel_printf("[sven] debug_string sev:%02x unit:%02x module:%02x sub:%02x\n[sven] %s", severity, unit, module,subtype, data);
             break;
         case 3:
             mel_printf("[sven] catalog_msg  sev:%02x unit:%02x module:%02x sub:%02x %08x%08x\n", severity, unit, module,subtype, *(uint32_t *)(data+8), *(uint32_t *)(data));

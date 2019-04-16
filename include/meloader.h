@@ -82,4 +82,8 @@ void tracehub_fake_probe();
 void tracehub_rs1_install();
 void sks_install();
 void spi_install();
+void spi_openimg( const char *path );
+int snowball_read( void *par );
+void snowball_add(const char *name, int unk0, int flags, int size, int unk1,
+                  void *data);
 #endif

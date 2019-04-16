@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <romlib.h>
 #include "meloader.h"
 #include "manifest.h"
 
@@ -92,7 +93,7 @@ void map_ranges_mod( me_mod *mod ) {
     map = mmap(
             (void *) mod->text_base,
             (size_t) mod->text_size + mod->rodata_size,
-            PROT_READ | PROT_EXEC,
+            PROT_READ | PROT_WRITE| PROT_EXEC,
             MAP_PRIVATE | MAP_FIXED,
             mod->mod_file,
             0);
@@ -246,6 +247,7 @@ int main( int argc, char **argv ) {
     char *modname = argv[1];
     char *libname = argv[2];
     char *romname = argv[3];
+    char *spiname = argv[4];
     uint32_t main_args[2];
 
     me_mod *mod = open_mod(modname, 0);
@@ -271,9 +273,23 @@ int main( int argc, char **argv ) {
     tracehub_rs1_install();
     sks_install();
     spi_install();
+    spi_openimg(spiname);
 
     main_args[0] = 0;
     main_args[1] = mod->threads[0].thread_id;
+
+    uint32_t dfx_data = 0;
+    uint64_t rom_bist = 1 << 11;
+    snowball_add("bootpart", 0, 0, 5, 0, "FTPR");
+    snowball_add("dfx_data", 0, 0, 4, 0, &dfx_data);
+    snowball_add("rom_bist", 0, 0, 8, 0, &rom_bist);
+
+
+    /* Below is for bup, for some reason it has its own read/write segment */
+    insert_thunk((void *) 0x2D000, write_seg_32 );
+    insert_thunk((void *) 0x2D016,  read_seg_32 );
+    insert_thunk((void *) 0x2D026, write_seg_8  );
+    insert_thunk((void *) 0x2D032,  read_seg_8  );
 
     start_thread(0, main_args, sizeof main_args);
     

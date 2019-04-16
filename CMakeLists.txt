@@ -32,4 +32,4 @@ add_executable(meloader
         syslib/tls.c
         syslib/thunks.c
         periph/sks/sks.c
-        periph/spi/spi.c)
+        periph/spi/spi.c kernel/snowball.c)
