@@ -11,7 +11,7 @@
 typedef struct {
     void *      stack_top;
     uintptr_t   stack_size;
-    void *entry_point;
+    void *      entry_point;
 } me_thrd;
 
 typedef struct {
@@ -65,8 +65,10 @@ void insert_thunk( void *wr, void *target );
 void *get_esp( void );
 
 void switch_stack( void *entry, void *s_top );
-
+void * get_thread_tls( int i );
+int get_current_thread_id( void );
 void romlib_install_thunks();
+void syslib_install_thunks();
 
 extern me_mod *current_mod;
 
@@ -76,5 +78,5 @@ void krnl_read_seg ( int seg, int offset, void *data, size_t count );
 void krnl_periph_reg( mmio_periph * periph );
 void tracehub_fake_probe();
 void tracehub_rs1_install();
-
+void sks_install();
 #endif

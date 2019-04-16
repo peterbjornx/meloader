@@ -20,4 +20,14 @@ add_executable(meloader
         kernel/simple_io.c
         kernel/memory.c
         util/numfmt.c
-        util/printf.c periph/tracehub/gth.c include/tracehub.h periph/tracehub/rs1.c periph/tracehub/ftmr.c util/trace.c include/mipitrace.h)
+        util/printf.c
+        periph/tracehub/gth.c
+        include/tracehub.h
+        periph/tracehub/rs1.c
+        periph/tracehub/ftmr.c
+        util/trace.c
+        include/mipitrace.h
+        syslib/kernelcall.c
+        include/syslib.h
+        syslib/tls.c
+        syslib/thunks.c periph/sks/sks.c)

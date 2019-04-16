@@ -17,8 +17,10 @@ void start_thread( int n ) {
             n,
             current_mod->threads[n].entry_point,
             current_mod->threads[n].stack_top);
+    uint32_t *tls_self_ptr = (current_mod->threads[n].stack_top - 0x4);
+    *tls_self_ptr = (uint32_t) tls_self_ptr;
     switch_stack( current_mod->threads[n].entry_point,
-                  current_mod->threads[n].stack_top );
+                  current_mod->threads[n].stack_top - 0x14 );
 }
 
 int get_current_thread_id( void ) {
@@ -40,4 +42,8 @@ int get_current_thread_id( void ) {
 
     return -1;
 
+}
+
+void * get_thread_tls( int i ) {
+    return current_mod->threads[i].stack_top - 0x4;
 }
