@@ -280,9 +280,14 @@ int main( int argc, char **argv ) {
 
     uint32_t dfx_data = 0;
     uint64_t rom_bist = 1 << 11;
+    uint8_t curr_keys[128];
+    uint8_t prev_keys[128];
     snowball_add("bootpart", 0, 0, 5, 0, "FTPR");
     snowball_add("dfx_data", 0, 0, 4, 0, &dfx_data);
     snowball_add("rom_bist", 0, 0, 8, 0, &rom_bist);
+    snowball_add("curr_keys", 0, 0, sizeof curr_keys, 0, &curr_keys);
+    snowball_add("prev_keys", 0, 0, sizeof curr_keys, 0, &prev_keys);
+
 
 
     /* Below is for bup, for some reason it has its own read/write segment */
