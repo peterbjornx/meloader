@@ -32,4 +32,10 @@ add_executable(meloader
         syslib/tls.c
         syslib/thunks.c
         periph/sks/sks.c
-        periph/spi/spi.c kernel/snowball.c)
+        periph/spi/spi.c
+        kernel/snowball.c
+        periph/hash/hash.c
+        periph/aes/aes.c
+        include/hash/sha256.h
+        periph/hash/sha256.c
+        include/hash/rotate-bits.h kernel/dma.c)

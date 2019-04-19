@@ -274,6 +274,8 @@ int main( int argc, char **argv ) {
     sks_install();
     spi_install();
     spi_openimg(spiname);
+    hash_install();
+    aes_install();
 
     main_args[0] = 0;
     main_args[1] = mod->threads[0].thread_id;

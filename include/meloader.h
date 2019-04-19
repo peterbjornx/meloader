@@ -86,4 +86,10 @@ void spi_openimg( const char *path );
 int snowball_read( void *par );
 void snowball_add(const char *name, int unk0, int flags, int size, int unk1,
                   void *data);
+void hash_install();
+int hash_get_result( void *data, size_t count );
+int aes_get_result( void *data, size_t count );
+void hash_load_key( void *data, size_t count );
+void aes_load_key( void *data, size_t count );
+void aes_install();
 #endif
