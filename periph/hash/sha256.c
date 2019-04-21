@@ -147,14 +147,12 @@ beint_from_bytes(const uint8_t *buffer, uint32_t *data32) {
 static void
 beint_to_bytes(uint8_t *digest, const uint32_t *data32) {
   int i;
-  for (i = 0; i < 8; i++)
-  {
-    *digest++ = (unsigned char)(data32[i] >> 24);
-    *digest++ = (unsigned char)(data32[i] >> 16);
-    *digest++ = (unsigned char)(data32[i] >> 8);
-    *digest++ = (unsigned char)(data32[i]);
+  for (i = 0; i < 8; i++) {
+    *digest++ = (unsigned char) (data32[i] >> 24);
+    *digest++ = (unsigned char) (data32[i] >> 16);
+    *digest++ = (unsigned char) (data32[i] >> 8);
+    *digest++ = (unsigned char) (data32[i]);
   }
-
 }
 
 void

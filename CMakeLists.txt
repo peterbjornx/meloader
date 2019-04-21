@@ -38,4 +38,11 @@ add_executable(meloader
         periph/aes/aes.c
         include/hash/sha256.h
         periph/hash/sha256.c
-        include/hash/rotate-bits.h kernel/dma.c)
+        include/hash/rotate-bits.h
+        kernel/dma.c
+        kernel/grant.c
+        include/grant.h
+        periph/dma/gpdma.c
+        include/gpdma.h
+        periph/fuse/fusectrl.c
+        periph/prtc/prtc.c periph/att/att.c include/att.h periph/sideband/sbdev.c include/sideband.h periph/att/sbb.c periph/att/bus.c util/log.c include/log.h)

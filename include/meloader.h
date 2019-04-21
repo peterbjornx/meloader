@@ -95,4 +95,6 @@ int aes_get_result( void *data, size_t count );
 void hash_load_key( void *data, size_t count );
 void aes_load_key( void *data, size_t count );
 void aes_install();
+void fuse_install();
+void prtc_install();
 #endif

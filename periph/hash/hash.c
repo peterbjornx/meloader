@@ -4,8 +4,9 @@
 #include "meloader.h"
 #include "printf.h"
 #include "hash/sha256.h"
+#include "gpdma.h"
 
-#define HASH_BASE (0xF510B000);
+#define HASH_BASE (0xF510B000)
 #define HASH_SIZE (0x1000)
 
 /*
@@ -66,6 +67,7 @@ uint32_t hash_mode = 0;
 uint32_t hash_status1 = 0;
 uint32_t hash_status2 = 0;
 uint8_t  hash_hmac_temp[64];
+gpdma_state hash_gpdma;
 
 void hash_round_init() {
     hash_count = 0;
@@ -148,16 +150,39 @@ void hash_hmac_round1_init() {
 void hash_do_command( uint32_t cmd ) {
     switch ( cmd ) {
         case HASH_CMD_START_DATA:
+            //mel_printf("[hash] Start data index:%i pos:%i\n", hash_count, hash_count & 63);
             hash_count &= ~63;
             if ( hash_mode & HASH_MODE_HMAC )
                 hash_hmac_round1_init();
             break;
         case HASH_CMD_FLUSH_DATA:
+            //mel_printf("[hash] Flush data index:%i pos:%i\n", hash_count, hash_count & 63);
             hash_round_finish(0);
             break;
         default:
             mel_printf("[hash] unknown command 0x%08x\n", cmd);
             break;
+    }
+}
+
+void hash_dma_write( const void *buffer, size_t count ) {
+    int rc,bp;
+    if (count <= 0) {
+        mel_printf("[hash] bad data write start:%i count:%i\n",
+                   hash_dataptr, count);
+        return;
+    }
+    while (count) {
+        rc = count;
+        bp = (int) (hash_count & 63);
+        if (rc + bp > 64)
+            rc = 64 - bp;
+        memcpy(hash_buffer + bp, buffer, (size_t) rc);
+        hash_count += rc;
+        count -= rc;
+        buffer += rc;
+        if ((hash_count & 63) == 0)
+            hash_round_process();
     }
 }
 
@@ -185,51 +210,39 @@ int hash_read(int addr, void *buffer, int count ) {
             return 1;
         }
         memcpy(buffer, hash_state + hash_stateptr, (size_t) count);
+        //mel_printf("[hash] read hash count:%i val: 0x%08x\n", count, *buf);
         hash_stateptr += count;
-    }
-    mel_printf("[hash] read  unknown 0x%03x count:%i val: 0x%08x\n", addr, count, *buf);
+    } else if ( !gpdma_read( &hash_gpdma, addr, buffer, count) )
+        mel_printf("[hash] read  unknown 0x%03x count:%i val: 0x%08x\n", addr, count, *buf);
     return 1;
 }
 
 int hash_write( int addr, const void *buffer, int count ) {
     const uint32_t *buf = buffer;
-    int i,rc,bp;
     addr -= HASH_BASE;
     if ( addr < 0 || addr >= HASH_SIZE )
         return 0;
     if ( addr == HASH_REG_DATA ) {
-        if (count <= 0) {
-            mel_printf("[hash] bad data write start:%i count:%i\n",
-                       hash_dataptr, count);
-            return 1;
-        }
-        while (count) {
-            rc = count;
-            bp = (int) (hash_count & 63);
-            if (rc + bp > 64)
-                rc = 64 - bp;
-            memcpy(hash_buffer + bp, buffer, (size_t) rc);
-            hash_count += rc;
-            count -= rc;
-            if ((hash_count & 63) == 0)
-                hash_round_process();
-        }
+        hash_dma_write( buffer, count );
         return 1;
     } else if ( count != 4 || (addr & 3) ) {
-        mel_printf("[hash] write misaligned 0x%03x count:%i\n", addr, count);
+        //mel_printf("[hash] write misaligned 0x%03x count:%i\n", addr, count);
         return 1;
     }
     if ( addr == HASH_REG_MODE ) {
+        //mel_printf("[hash] write MODE 0x%08x\n", *buf);
         hash_mode = *buf;
         hash_stateptr = 0;
         hash_round_init();
     } else if ( addr == HASH_REG_CMD ) {
+        //mel_printf("[hash] write CMD 0x%08x\n", *buf);
         hash_do_command( *buf );
     } else if ( addr == HASH_REG_HASH ) {
         if ( hash_stateptr + count > 32 ) {
             mel_printf("[hash] bad state write off:%i count:%i\n", addr, count);
             return 1;
         }
+        //mel_printf("[hash] write hash count:%i val: 0x%08x\n", count, *buf);
         memcpy( hash_state + hash_stateptr, buffer, (size_t) count);
         hash_stateptr += count;
     } else if ( addr == HASH_REG_COUNTL ) {
@@ -240,10 +253,16 @@ int hash_write( int addr, const void *buffer, int count ) {
         hash_status1 &= ~*buf;
     } else if ( addr == HASH_REG_STS2 ) {
         hash_status2 &= ~*buf;
-    } else
+    } else if ( !gpdma_write( &hash_gpdma, addr, buffer, count) )
         mel_printf("[hash] write unknown 0x%03x count:%i val: 0x%08x\n", addr, count, *buf);
 
     return 1;
+}
+
+
+void hash_dma_read( void *data, size_t size ) {
+    mel_printf("[hash] bad dma read from hash!!!\n");
+
 }
 
 void hash_load_key( void *data, size_t count ) {
@@ -263,6 +282,9 @@ mmio_periph hash_mmio = {
 };
 
 void hash_init(){
+    gpdma_init( &hash_gpdma );
+    hash_gpdma.int_read = hash_dma_read;
+    hash_gpdma.int_write = hash_dma_write;
 }
 
 void hash_install() {
