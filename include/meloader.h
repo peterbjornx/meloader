@@ -77,6 +77,9 @@ extern me_mod *current_mod;
 void krnl_write_seg( int seg, int offset, void *data, size_t count );
 void krnl_read_seg ( int seg, int offset, void *data, size_t count );
 
+void dma_write( int address, const void *data, size_t count );
+void dma_read ( int address, void *data, size_t count );
+
 void krnl_periph_reg( mmio_periph * periph );
 void tracehub_fake_probe();
 void tracehub_rs1_install();

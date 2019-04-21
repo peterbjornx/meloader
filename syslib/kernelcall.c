@@ -5,8 +5,11 @@
 #include <stdint.h>
 #include "printf.h"
 #include "meloader.h"
+
 int sys_dma_lock_ex( void *par );
 int sys_dma_unlock( void *par );
+int sys_mg_synclist( void *par );
+
 typedef struct {
     const char *name;
     int size;
@@ -19,7 +22,12 @@ kernelcall_table kctable[] = {
             .size = 16,
             .impl = snowball_read
         },
-        {},{},{},{/*4*/},{},{},{},{/*8*/},
+        {},{},{},{/*4*/},
+        {
+            .name = "sys_mg_synclist",
+            .size = 8,
+            .impl = sys_mg_synclist
+            },{},{},{/*8*/},
         {},{},{},{/*12*/},{},{},{},{/*16*/},
         {},{},{},{/*20*/},{},{},{},{/*24*/},
         {},
