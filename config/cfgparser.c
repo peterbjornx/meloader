@@ -581,7 +581,7 @@ int cfg_find_int64( const cfg_section *section, const char *name, uint64_t *out 
             break;
     }
     if ( !cur || cur->type != CONFIG_TYPE_INT64 )
-        return 1;
+        return -1;
     *out = cur->int64;
     return 0;
 }
@@ -600,7 +600,7 @@ int cfg_find_int32( const cfg_section *section, const char *name, uint32_t *out 
             break;
     }
     if ( !cur || cur->type != CONFIG_TYPE_INT64 )
-        return 1;
+        return -1;
     *out = cur->int64;
     return 0;
 }
