@@ -6,7 +6,9 @@ under the GPLv2. (I reused code from an earlier project under that license)
 A commit adding license headers will soon follow.
 
 Much of the later achievements demoed using this project were done on a local branch which
-I lost, resetting the project to its progress at April 21st 2019.
+I lost, resetting the project to its progress at April 21st 2019. This also means that the
+hardware register names and structures as used by this tool do not represent my current 
+understanding of the ME hardware.
 
 Running the tool requires mmaping addresses from 0x1000 onward and so means that low mmap 
 addresses should be enabled.
