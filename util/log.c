@@ -18,11 +18,11 @@ void log( int level, const char *module, const char *format, ...) {
     va_list  list;
     va_start(list, format);
 
-    if ( level < log_level ) {
+    if ( level > log_level ) {
 
         mel_vsnprintf( log_buffer, 1024, format, list );
 
-        mel_printf( "[%s] %s: %s",
+        mel_printf( "[%s] %s: %s\n",
                 level_names[level],
                 module,
                 log_buffer );
