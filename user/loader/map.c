@@ -5,26 +5,11 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <romlib.h>
-#include "meloader.h"
+#include <user/romlib.h>
+#include <log.h>
+#include "user/meloader.h"
 #include "manifest.h"
-
-void krnl_set_current_mod(me_mod *mod);
-
-off_t filesz(int fd ) {
-    off_t oldpos, size;
-    oldpos = lseek( fd, 0, SEEK_CUR );
-    size = lseek( fd, 0, SEEK_END );
-    lseek( fd, oldpos, SEEK_SET );
-    return size;
-}   
-
-void or_error( int cond, const char *fmt ) {
-    if ( cond )
-        return;
-    fprintf( stderr, fmt, strerror( errno ) );
-    exit(EXIT_FAILURE);
-}
+#include "file.h"
 
 void populate_ranges_mod( me_mod *mod, size_t context_size ) {
     man_ext_mod_attr *mod_attr;
@@ -40,10 +25,10 @@ void populate_ranges_mod( me_mod *mod, size_t context_size ) {
     process  = man_ext_find( mod->met_map, mod->met_size,  5 );
     mmios    = man_ext_find( mod->met_map, mod->met_size,  8 );
 
-    or_error( mod_attr != NULL, "Manifest did not contain mod_attr extension" );
-    or_error( process != NULL,  "Manifest did not contain process extension" );
-    or_error( threads != NULL, "Manifest did not contain threads extension" );
-    or_error( mmios != NULL, "Manifest did not contain mmio extension" );
+    logassert( mod_attr != NULL, "loader", "Manifest did not contain mod_attr extension" );
+    logassert( process != NULL, "loader",  "Manifest did not contain process extension" );
+    logassert( threads != NULL, "loader", "Manifest did not contain threads extension" );
+    logassert( mmios != NULL, "loader", "Manifest did not contain mmio extension" );
 
     mod->text_base = (void *) process->priv_code_base_address;
     mod->text_size = process->uncompressed_priv_code_size;
@@ -78,7 +63,8 @@ void populate_ranges_mod( me_mod *mod, size_t context_size ) {
     next_base += process->default_heap_size;
     mod->bss_base = next_base;
     mod->bss_size = process->bss_size + context_size;
-    fprintf(stderr, "[info] bss: %p size: %x ctxs: %x\n", mod->bss_base,
+
+    log(LOG_DEBUG, "loader", "bss: %p size: %x ctxs: %x\n", mod->bss_base,
            process->bss_size, context_size);
 
 }
@@ -87,7 +73,7 @@ void map_ranges_mod( me_mod *mod ) {
     void *map, *base;
     int i;
 
-    fprintf(stderr, "[info]   text %p-%p\n", mod->text_base,
+    log(LOG_DEBUG, "loader", "text %p-%p\n", mod->text_base,
             mod->text_base+mod->text_size);
 
     map = mmap(
@@ -97,11 +83,12 @@ void map_ranges_mod( me_mod *mod ) {
             MAP_PRIVATE | MAP_FIXED,
             mod->mod_file,
             0);
-    or_error(map == (void *) mod->text_base, "Could not map text: %s" );
+    logassert(map == (void *) mod->text_base,
+            "loader", "Could not map text: %s", strerror( errno ) );
 
 
 
-    fprintf(stderr, "[info] rodata %p-%p\n", mod->rodata_base,
+    log(LOG_DEBUG, "loader", "rodata %p-%p\n", mod->rodata_base,
             mod->rodata_base+mod->rodata_size);
 
     /*
@@ -116,7 +103,7 @@ void map_ranges_mod( me_mod *mod ) {
     */
 
 
-    fprintf(stderr, "[info]   heap %p-%p\n", mod->heap_base,
+    log(LOG_DEBUG, "loader", "heap %p-%p\n", mod->heap_base,
             mod->heap_base+mod->heap_size);
     map = mmap(
             (void *) mod->heap_base,
@@ -125,9 +112,10 @@ void map_ranges_mod( me_mod *mod ) {
             MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
             -1,
             0);
-    or_error(map == (void *) mod->heap_base, "Could not map heap: %s" );
+    logassert(map == (void *) mod->heap_base,
+            "loader", "Could not map heap: %s", strerror( errno ) );
 
-    fprintf(stderr, "[info]    bss %p-%p\n", mod->bss_base,
+    log(LOG_DEBUG, "loader", "bss %p-%p\n", mod->bss_base,
             mod->bss_base+mod->bss_size);
 
     map = mmap(
@@ -137,7 +125,8 @@ void map_ranges_mod( me_mod *mod ) {
             MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
             -1,
             0);
-    or_error(map == (void *) mod->bss_base, "Could not map bss: %s" );
+    logassert(map == (void *) mod->bss_base, "loader",
+            "Could not map bss: %s", strerror( errno ) );
 
     for ( i = 0; i < mod->num_threads; i++ ){
         base = (void *) (mod->threads[i].stack_top - mod->threads[i].stack_size);
@@ -148,7 +137,8 @@ void map_ranges_mod( me_mod *mod ) {
                 MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
                 -1,
                 0);
-        or_error( map == base, "Could not map stack: %s" );
+        logassert( map == base, "loader",
+                "Could not map stack: %s", strerror( errno ) );
 
     }
 }
@@ -162,15 +152,14 @@ void populate_ranges_shlib(me_mod *mod) {
     shlib  = man_ext_find( mod->met_map, mod->met_size,  4 );
     ranges  = man_ext_find( mod->met_map, mod->met_size,  11 );
 
-    or_error( mod_attr != NULL, "Manifest did not contain mod_attr extension" );
-    or_error( shlib    != NULL, "Manifest did not contain shared lib extension" );
-    or_error( ranges   != NULL, "Manifest did not contain locked ranges extension" );
+    logassert( mod_attr != NULL, "loader", "Manifest did not contain mod_attr extension" );
+    logassert( shlib    != NULL, "loader", "Manifest did not contain shared lib extension" );
+    logassert( ranges   != NULL, "loader", "Manifest did not contain locked ranges extension" );
 
-    or_error(
+    logassert(
             ranges->length >=
     sizeof(man_ext_locked_ranges) + sizeof(man_locked_range ),
-            "Locked range extension is empty"
-            );
+            "loader", "Locked range extension is empty" );
 
     mod->load_base = ( void * ) ranges->ranges[0].base;
     mod->load_size = mod_attr->uncompressed_size;
@@ -188,10 +177,9 @@ void populate_ranges_romlib( me_mod *mod, uintptr_t base ) {
     mod->context_size = 0;
 }
 
-
 void map_ranges_lib( me_mod *mod ) {
     void *map;
-    fprintf(stderr, "[info] Mapping file %i to %p-%p\n",mod->mod_file,
+    log(LOG_DEBUG, "loader", "Mapping file %i to %p-%p\n",mod->mod_file,
             mod->load_base, mod->load_base+mod->load_size);
     map = mmap(
             (void *) mod->load_base,
@@ -200,7 +188,8 @@ void map_ranges_lib( me_mod *mod ) {
             MAP_PRIVATE | MAP_FIXED,
             mod->mod_file,
             0);
-    or_error(map == (void *) mod->load_base, "Could not map library: %s");
+    logassert(map == (void *) mod->load_base,
+            "loader", "Could not map library: %s", strerror( errno ) );
 
     if (mod->bss_size != 0) {
         map = mmap(
@@ -210,7 +199,8 @@ void map_ranges_lib( me_mod *mod ) {
                 MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
                 -1,
                 0);
-        or_error(map == (void *) mod->bss_base, "Could not map library bss: %s");
+        logassert(map == (void *) mod->bss_base,
+                "loader", "Could not map library bss: %s", strerror( errno ) );
     }
 
 }
@@ -221,12 +211,12 @@ me_mod *open_mod( const char *modname, int nomet ) {
 
     sprintf( path, "%s.mod", modname );
     mod->mod_file = open( path, O_RDONLY );
-    or_error( mod->mod_file >= 0, "Could not open module file: %s\n" );
+    logassert( mod->mod_file >= 0, "loader", "Could not open module file: %s\n" );
 
     if ( !nomet ) {
         sprintf(path, "%s.met", modname);
         mod->met_file = open(path, O_RDONLY);
-        or_error(mod->met_file >= 0, "Could not open manifest file: %s\n");
+        logassert(mod->met_file >= 0, "loader", "Could not open manifest file: %s\n");
 
         mod->met_size = filesz( mod->met_file );
         /* Module files are open */
@@ -237,69 +227,8 @@ me_mod *open_mod( const char *modname, int nomet ) {
                              MAP_PRIVATE,
                              mod->met_file,
                              0 );
-        or_error( mod->met_map != MAP_FAILED, "Could not map manifest: %s\n"  );
+        logassert( mod->met_map != MAP_FAILED, "loader", "Could not map manifest: %s\n"  );
     }
 
     return mod;
-}
-
-int main( int argc, char **argv ) {
-    char *modname = argv[1];
-    char *libname = argv[2];
-    char *romname = argv[3];
-    char *spiname = argv[4];
-    uint32_t main_args[2];
-
-    me_mod *mod = open_mod(modname, 0);
-    me_mod *romlib = open_mod(romname, 1);
-    me_mod *syslib = open_mod(libname, 0);
-
-    printf("Testing getesp %p",get_esp());
-
-    populate_ranges_romlib( romlib, 0x1000 );
-    populate_ranges_shlib( syslib );
-    populate_ranges_mod( mod, syslib->context_size );
-
-    map_ranges_mod( mod );
-    map_ranges_lib( syslib );
-    map_ranges_lib( romlib );
-
-    krnl_set_current_mod( mod );
-
-    romlib_install_thunks();
-    syslib_install_thunks();
-
-    tracehub_fake_probe();
-    tracehub_rs1_install();
-    sks_install();
-    spi_install();
-    spi_openimg(spiname);
-    hash_install();
-    aes_install();
-
-    main_args[0] = 0;
-    main_args[1] = mod->threads[0].thread_id;
-
-    uint32_t dfx_data = 0;
-    uint64_t rom_bist = 1 << 11;
-    uint8_t curr_keys[128];
-    uint8_t prev_keys[128];
-    snowball_add("bootpart", 0, 0, 5, 0, "FTPR");
-    snowball_add("dfx_data", 0, 0, 4, 0, &dfx_data);
-    snowball_add("rom_bist", 0, 0, 8, 0, &rom_bist);
-    snowball_add("curr_keys", 0, 0, sizeof curr_keys, 0, &curr_keys);
-    snowball_add("prev_keys", 0, 0, sizeof curr_keys, 0, &prev_keys);
-
-
-
-    /* Below is for bup, for some reason it has its own read/write segment */
-    insert_thunk((void *) 0x2D000, write_seg_32 );
-    insert_thunk((void *) 0x2D016,  read_seg_32 );
-    insert_thunk((void *) 0x2D026, write_seg_8  );
-    insert_thunk((void *) 0x2D032,  read_seg_8  );
-
-    start_thread(0, main_args, sizeof main_args);
-    
-    /* TEXT/RODATA | STACK + GUARD | HEAP | BSS | CTX */
-
 }

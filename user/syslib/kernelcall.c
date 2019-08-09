@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include "printf.h"
-#include "meloader.h"
+#include "user/meloader.h"
 
 int sys_dma_lock_ex( void *par );
 int sys_dma_unlock( void *par );

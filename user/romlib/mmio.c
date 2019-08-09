@@ -2,8 +2,7 @@
 // Created by pbx on 03/04/19.
 //
 
-#include <stdio.h>
-#include "meloader.h"
+#include "user/meloader.h"
 
 long long tstamp_read(void ) {
     return 0x7EADCAFEFEED1337LL;
@@ -19,7 +18,6 @@ void write_seg_16(int seg, int offset, short value) {
 }
 void write_seg_8 (int seg, int offset, char value) {
     krnl_write_seg( seg, offset, &value, sizeof value );
-
 }
 
 int   read_seg_32(int seg, int offset) {

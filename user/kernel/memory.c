@@ -2,9 +2,18 @@
 // Created by pbx on 05/04/19.
 //
 #include <string.h>
-#include "meloader.h"
+#include <fsb.h>
+#include "user/meloader.h"
 #include "printf.h"
-#include "att.h"
+#include "gasket/att.h"
+
+
+static mia_fsb *fsb;
+static device_instance *cpu;
+void krnl_set_cpu( device_instance *_cpu ) {
+    fsb = _cpu->impl;
+    cpu = _cpu;
+}
 
 int peripheral_count = 0;
 mmio_periph *peripheral_list[64];
@@ -53,18 +62,15 @@ void dma_read ( int lad, void *data, size_t count ) {
 
 }
 
-void krnl_write_seg( int seg, int offset, void *data, size_t count ) {
+void krnl_write_seg( int seg, int offset, const void *data, size_t count ) {
     int lad, v=0;
     krnl_deref_seg( seg, offset, count, &lad );
-    if (!periph_write (lad, data, count))
-        mel_printf("[mmio] Unimplemented write addr: 0x%08x count: %i\n", lad, count);
+    fsb->sa_mem_write( fsb->sa, lad, data, count );
 }
 
 void krnl_read_seg ( int seg, int offset, void *data, size_t count ) {
     int lad,v = 0;
     krnl_deref_seg( seg, offset, count, &lad );
-    if ((!periph_read (lad, data, count)) && seg != 0x3b ) {
-        mel_printf("[mmio] Unimplemented read addr:  0x%08x count: %i\n", lad, count);
-    }
+    fsb->sa_mem_read( fsb->sa, lad, data, count );
 }
 

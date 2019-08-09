@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include "devreg.h"
 
 typedef struct {
     uint32_t    thread_id;
@@ -53,29 +54,20 @@ typedef struct {
     int (*read )( int addr, void *buffer, int count );
 } mmio_periph;
 
-void write_hexn( int v );
-
-void write_hex(int n,int i);
-
-void write_str(char *s);
-
-void or_error( int cond, const char *fmt );
-
-void insert_thunk( void *wr, void *target );
-
 void *get_esp( void );
 
 void switch_stack( void *entry, void *s_top );
 void start_thread( int n, void *args, size_t args_size );
 void * get_thread_tls( int i );
 int get_current_thread_id( void );
-void romlib_install_thunks();
 void syslib_install_thunks();
 
+void krnl_set_current_mod(me_mod *mod);
 extern me_mod *current_mod;
 
-void krnl_write_seg( int seg, int offset, void *data, size_t count );
+void krnl_write_seg( int seg, int offset, const void *data, size_t count );
 void krnl_read_seg ( int seg, int offset, void *data, size_t count );
+void krnl_set_cpu( device_instance *_cpu );
 
 void dma_write( int address, const void *data, size_t count );
 void dma_read ( int address, void *data, size_t count );
