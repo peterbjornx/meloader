@@ -27,7 +27,7 @@ void device_type_register( device_type *type ) {
     type_list = type;
 }
 
-const device_instance *device_find( const char *name ) {
+device_instance *device_find( const char *name ) {
     device_instance *cur;
     for ( cur = device_list; cur; cur = cur->next) {
         if ( strcmp( name, cur->name ) == 0 )

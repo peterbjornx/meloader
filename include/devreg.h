@@ -31,5 +31,7 @@ void initialize_devices( const cfg_file *file );
 
 void device_register( device_instance *device );
 
+device_instance *device_find( const char *name );
+
 
 #endif //MELOADER_DEVREG_H
