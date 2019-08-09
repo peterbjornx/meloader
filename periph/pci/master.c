@@ -178,17 +178,20 @@ int pci_bus_config_write( pci_bus *bus, uint64_t addr, const void *out, int coun
  * @param addr    The physical address to access
  * @param out     The buffer that will receive the read data
  * @param count   The number of bytes to read
+ * @param sai     The security attribute of initiator, an ID used to identify masters
  * @param max_lat The maximum number of simulated clock cycles to wait for a
  *                completion.
- * @return >= 0 when successful
+ * @return        The SAI of the target when successful, <0 when not.
  */
-int pci_bus_mem_read( pci_bus *bus, uint64_t addr, void *out, int count, int max_lat ) {
-    int lat = 0;
+int pci_bus_mem_read( pci_bus *bus, uint64_t addr, void *out, int count, int sai, int max_lat ) {
+    int lat = 0, csai;
     pci_func *func;
     for ( lat = 0; lat < max_lat; lat++ ) {
-        for ( func = bus->first_func; func; func = func->next )
-            if ( func->mem_read( func, addr, out, count, lat ) == 0 )
-                return 0;
+        for ( func = bus->first_func; func; func = func->next ) {
+            csai = func->mem_read(func, addr, out, count, sai, lat);
+            if ( csai >= 0 )
+                return csai;
+        }
     }
     return -1;
 }
@@ -200,18 +203,67 @@ int pci_bus_mem_read( pci_bus *bus, uint64_t addr, void *out, int count, int max
  * @param addr    The physical address to access
  * @param out     The buffer that holds the data to write
  * @param count   The number of bytes to write
+ * @param sai     The security attribute of initiator, an ID used to identify masters
  * @param max_lat The maximum number of simulated clock cycles to wait for a
  *                completion.
  * @return >= 0 when successful
  */
-int pci_bus_mem_write( pci_bus *bus, uint64_t addr, const void *out, int count, int max_lat ) {
+int pci_bus_mem_write( pci_bus *bus, uint64_t addr, const void *out, int count, int sai, int max_lat ) {
     int lat = 0;
     pci_func *func;
     for ( lat = 0; lat < max_lat; lat++ ) {
         for ( func = bus->first_func; func; func = func->next )
-            if ( func->mem_write( func, addr, out, count, lat ) == 0 )
+            if ( func->mem_write( func, addr, out, count, sai, lat ) == 0 )
                 return 0;
     }
+    return -1;
+}
+
+/**
+ * Perform an IO read cycle on a PCI bus.
+ * Bus traversal is handled by bridges on the bus.
+ * @param bus     The bus to initiate the cycle on.
+ * @param addr    The physical address to access
+ * @param out     The buffer that will receive the read data
+ * @param count   The number of bytes to read
+ * @param sai     The security attribute of initiator, an ID used to identify masters
+ * @param max_lat The maximum number of simulated clock cycles to wait for a
+ *                completion.
+ * @return        The SAI of the target when successful, <0 when not.
+ */
+int pci_bus_io_read( pci_bus *bus, uint64_t addr, void *out, int count, int sai, int max_lat ) {
+    int lat = 0, csai;
+    pci_func *func;
+    /*for ( lat = 0; lat < max_lat; lat++ ) {
+        for ( func = bus->first_func; func; func = func->next ) {
+            csai = func->mem_read(func, addr, out, count, sai, lat);
+            if ( csai >= 0 )
+                return csai;
+        }
+    }*/
+    return -1;
+}
+
+/**
+ * Perform an IO write cycle on a PCI bus.
+ * Bus traversal is handled by bridges on the bus.
+ * @param bus     The bus to initiate the cycle on.
+ * @param addr    The physical address to access
+ * @param out     The buffer that holds the data to write
+ * @param count   The number of bytes to write
+ * @param sai     The security attribute of initiator, an ID used to identify masters
+ * @param max_lat The maximum number of simulated clock cycles to wait for a
+ *                completion.
+ * @return >= 0 when successful
+ */
+int pci_bus_io_write( pci_bus *bus, uint64_t addr, const void *out, int count, int sai, int max_lat ) {
+    int lat = 0;
+    pci_func *func;
+    /*for ( lat = 0; lat < max_lat; lat++ ) {
+        for ( func = bus->first_func; func; func = func->next )
+            if ( func->io_write && func->io_write( func, addr, out, count, sai, lat ) == 0 )
+                return 0;
+    }*/
     return -1;
 }
 

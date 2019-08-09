@@ -41,8 +41,8 @@ struct pci_func_s {
     pci_cfgspace     config;
     int              (*cfg_read) ( pci_func *func, uint64_t addr,       void *out, int count );
     int              (*cfg_write)( pci_func *func, uint64_t addr, const void *out, int count );
-    int              (*mem_read) ( pci_func *func, uint64_t addr,       void *out, int count, int lat );
-    int              (*mem_write)( pci_func *func, uint64_t addr, const void *out, int count, int lat );
+    int              (*mem_read) ( pci_func *func, uint64_t addr,       void *out, int count, int sai, int lat );
+    int              (*mem_write)( pci_func *func, uint64_t addr, const void *out, int count, int sai, int lat );
 };
 
 void      pci_bus_register    ( pci_bus *bus );
@@ -52,8 +52,8 @@ pci_func *pci_func_find       ( pci_bus *bus, uint32_t bdf );
 void      pci_set_bus_num     ( pci_bus *bus, unsigned int bus_num );
 int       pci_bus_config_read ( pci_bus *bus, uint64_t addr,       void *out, int count );
 int       pci_bus_config_write( pci_bus *bus, uint64_t addr, const void *out, int count );
-int       pci_bus_mem_read    ( pci_bus *bus, uint64_t addr,       void *out, int count, int max_lat );
-int       pci_bus_mem_write   ( pci_bus *bus, uint64_t addr, const void *out, int count, int max_lat );
-int       pci_bus_io_read     ( pci_bus *bus, uint64_t addr,       void *out, int count, int max_lat );
-int       pci_bus_io_write    ( pci_bus *bus, uint64_t addr, const void *out, int count, int max_lat );
+int       pci_bus_mem_read    ( pci_bus *bus, uint64_t addr,       void *out, int count, int sai, int max_lat );
+int       pci_bus_mem_write   ( pci_bus *bus, uint64_t addr, const void *out, int count, int sai, int max_lat );
+int       pci_bus_io_read     ( pci_bus *bus, uint64_t addr,       void *out, int count, int sai, int max_lat );
+int       pci_bus_io_write    ( pci_bus *bus, uint64_t addr, const void *out, int count, int sai, int max_lat );
 #endif //MELOADER_PCI_BUS_H

@@ -80,7 +80,7 @@ static int pci_simple_cfg_write( pci_func *func, uint64_t addr, const void *out,
 
 }
 
-static int pci_simple_mem_read( pci_func *func, uint64_t addr,       void *buf, int count, int lat )
+static int pci_simple_mem_read( pci_func *func, uint64_t addr,       void *buf, int count, int sai, int lat )
 {
     uint64_t off = 0, base;
     int bar;
@@ -139,7 +139,7 @@ static int pci_simple_mem_read( pci_func *func, uint64_t addr,       void *buf, 
 
 }
 
-static int pci_simple_mem_write( pci_func *func, uint64_t addr, const void *buf, int count, int lat )
+static int pci_simple_mem_write( pci_func *func, uint64_t addr, const void *buf, int count, int sai, int lat )
 {
     uint64_t off = 0, base;
     int bar;
