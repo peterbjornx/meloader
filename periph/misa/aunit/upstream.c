@@ -39,9 +39,9 @@ void misa_aunit_upstream_write( misa_inst *sa, uint32_t addr, const void *buffer
                         MISA_ACF8_G_REGOFF(sa->registers.aunit.ACF8)),
                 buffer, size );
     } else if ( addr <= 0xFFFF ) {
-        pci_bus_io_write( &sa->bus, addr, buffer, size, 16, sa->sai );
+        pci_bus_io_write( &sa->bus, addr, buffer, size, sa->sai, 16 );
     } else {
-        pci_bus_mem_write( &sa->bus, addr, buffer, size, 16, sa->sai );
+        pci_bus_mem_write( &sa->bus, addr, buffer, size, sa->sai, 16 );
     }
 }
 
@@ -75,9 +75,9 @@ void misa_aunit_upstream_read( misa_inst *sa, uint32_t addr,        void *buffer
                     MISA_ACF8_G_REGOFF(sa->registers.aunit.ACF8)),
                 buffer, size );
     } else if ( addr <= 0xFFFF ) {
-        pci_bus_io_read( &sa->bus, addr, buffer, size, 16, sa->sai );
+        pci_bus_io_read( &sa->bus, addr, buffer, size, sa->sai, 16 );
     } else {
-        int s = pci_bus_mem_read( &sa->bus, addr, buffer, size, 16, sa->sai );
+        int s = pci_bus_mem_read( &sa->bus, addr, buffer, size, sa->sai, 16 );
         if ( s <= 0 || !misa_aunit_may_complete( sa, s ) ) {
             log( LOG_ERROR, sa->self.name, "Bus error while reading from primary bus addr %08X size %8X",
                     addr, size);
