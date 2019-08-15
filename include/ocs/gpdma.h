@@ -17,8 +17,9 @@ typedef struct {
     uint32_t dst_size;
     uint32_t control;
     uint32_t status;
-    void (*int_write)( void *data, uint32_t size );
-    void (*int_read) ( void *data, uint32_t size );
+    void (*int_write)( void *i, void *data, uint32_t size );
+    void (*int_read) ( void *i, void *data, uint32_t size );
+    void *impl;
 } gpdma_state;
 
 void gpdma_init( gpdma_state *state );

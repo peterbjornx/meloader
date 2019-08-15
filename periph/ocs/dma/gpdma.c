@@ -1,7 +1,7 @@
 #include "log.h"
-#include "meloader.h"
+#include "user/meloader.h"
 #include <stdint.h>
-#include "gpdma.h"
+#include "ocs/gpdma.h"
 
 int gpdma_read( gpdma_state *state, int addr, void *buffer, int count ) {
     uint32_t *buf = buffer;
@@ -52,12 +52,12 @@ void gpdma_run_transaction( gpdma_state *state ) {
         if ( state->src_addr ) {
             dma_read(state->src_addr + pos, gpdma_buffer, (size_t) turnsize);
         } else {
-            state->int_read(gpdma_buffer, (uint32_t) turnsize);
+            state->int_read(state->impl, gpdma_buffer, (uint32_t) turnsize);
         }
         if ( state->dst_addr ) {
             dma_write(state->dst_addr + pos, gpdma_buffer, (size_t) turnsize);
         } else {
-            state->int_write(gpdma_buffer, (uint32_t) turnsize);
+            state->int_write(state->impl, gpdma_buffer, (uint32_t) turnsize);
         }
         pos += turnsize;
         count -= turnsize;

@@ -7,18 +7,18 @@ include_directories(include)
 
 add_executable(meloader
         include/manifest.h
-        manifest.c
-        map.c
-        include/meloader.h
-        me_abi.c
-        kernel/threads.c
-        romlib/mmio.c
-        include/romlib.h
+        user/loader/manifest.c
+        user/loader/map.c
+        include/user/meloader.h
+        user/loader/me_abi.c
+        user/kernel/threads.c
+        user/romlib/mmio.c
+        include/user/romlib.h
         include/printf.h
         include/numfmt.h
-        romlib/thunks.c
-        kernel/simple_io.c
-        kernel/memory.c
+        user/romlib/thunks.c
+        user/kernel/simple_io.c
+        user/kernel/memory.c
         util/numfmt.c
         util/printf.c
         periph/tracehub/gth.c
@@ -27,22 +27,57 @@ add_executable(meloader
         periph/tracehub/ftmr.c
         util/trace.c
         include/mipitrace.h
-        syslib/kernelcall.c
-        include/syslib.h
-        syslib/tls.c
-        syslib/thunks.c
-        periph/sks/sks.c
+        user/syslib/kernelcall.c
+        include/user/syslib.h
+        user/syslib/tls.c
+        user/syslib/thunks.c
+        periph/ocs/sks/sks.c
         periph/spi/spi.c
-        kernel/snowball.c
-        periph/hash/hash.c
-        periph/aes/aes.c
-        include/hash/sha256.h
-        periph/hash/sha256.c
-        include/hash/rotate-bits.h
-        kernel/dma.c
-        kernel/grant.c
+        user/kernel/snowball.c
+        periph/ocs/hash/hash.c
+        periph/ocs/aes/aes.c
+        include/ocs/hash/sha256.h
+        periph/ocs/hash/sha256.c
+        include/ocs/hash/rotate-bits.h
+        user/kernel/dma.c
+        user/kernel/grant.c
         include/grant.h
-        periph/dma/gpdma.c
-        include/gpdma.h
-        periph/fuse/fusectrl.c
-        periph/prtc/prtc.c periph/att/att.c include/att.h periph/sideband/sbdev.c include/sideband.h periph/att/sbb.c periph/att/bus.c util/log.c include/log.h)
+        periph/ocs/dma/gpdma.c
+        include/ocs/gpdma.h
+        periph/sideband/sbdev.c
+        include/sideband.h
+        util/log.c
+        include/log.h
+        include/cfg_file.h
+        config/cfgparser.c
+        config/devreg.c
+        include/devreg.h
+        include/misa/regs.h
+        include/misa/emu.h
+        include/pci/bus.h
+        include/pci/device.h
+        include/pci/cfgspace.h
+        periph/pci/master.c
+        periph/pci/simplefunc.c
+        periph/pci/config.c
+        periph/misa/hunit.c
+        periph/misa/aunit/upstream.c
+        periph/misa/bunit.c
+        periph/misa/aunit/bus_target.c
+        periph/misa/aunit/iommu.c
+        periph/misa/dev.c
+        include/fsb.h
+        periph/cpu/usercpu.c
+        include/cpu/usercpu.h
+        user/loader/meloader.c
+        util/file.c
+        include/file.h
+        periph/gasket/prim2gasket/dev.c
+        periph/gasket/att/prim_bus.c
+        periph/gasket/att/prim_regs.c
+        periph/gasket/att/sb_regs.c
+        periph/gasket/att/sb_master.c
+        periph/gasket/att/dev.c
+        include/gasket/att/regs.h
+        periph/spi/dev.c
+        periph/ocs/dev.c include/ocs/dev.h include/ocs/sks.h include/ocs/hash/hash.h include/ocs/aes.h)
