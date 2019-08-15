@@ -5,9 +5,9 @@
 #ifndef MELOADER_TRACEHUB_H
 #define MELOADER_TRACEHUB_H
 
-#define TRACEHUB_MTB_BASE    (0xF7400000)
+#include "pci/device.h"
+
 #define TRACEHUB_MTB_SIZE    (0x00100000)
-#define TRACEHUB_FTMR_BASE   (0xF7000000)
 #define TRACEHUB_FTMR_SIZE   (0x00400000)
 
 #define TRACEHUB_GTH_OFFSET     (0x0)
@@ -19,9 +19,16 @@
 #define TRACEHUB_VISE_OFFSET    (0x7000)
 #define TRACEHUB_VISC_OFFSET    (0x20000)
 
-void tracehub_gth_read(int addr, void *buffer, int count);
-void tracehub_gth_write(int addr, const void *buffer, int count);
-int tracehub_ftmr_read( int addr, void *buffer, int count );
-int tracehub_ftmr_write( int addr, const void *buffer, int count );
+typedef struct {
+    device_instance self;
+    pci_simplefunc func;
+    uint32_t gth_scrpd0;
+    uint32_t gth_swdest[32];
+} thub_inst;
+void tracehub_fake_probe( thub_inst *t );
+void tracehub_gth_read( thub_inst *t, uint32_t addr, void *buffer, int count);
+void tracehub_gth_write( thub_inst *t, uint32_t addr, const void *buffer, int count);
+int tracehub_ftmr_read(  thub_inst *t, uint32_t addr, void *buffer, int count );
+int tracehub_ftmr_write(  thub_inst *t, uint32_t addr, const void *buffer, int count );
 
 #endif //MELOADER_TRACEHUB_H
