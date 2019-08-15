@@ -64,7 +64,7 @@ void populate_ranges_mod( me_mod *mod, size_t context_size ) {
     mod->bss_base = next_base;
     mod->bss_size = process->bss_size + context_size;
 
-    log(LOG_DEBUG, "loader", "bss: %p size: %x ctxs: %x\n", mod->bss_base,
+    log(LOG_DEBUG, "loader", "bss: %p size: %x ctxs: %x", mod->bss_base,
            process->bss_size, context_size);
 
 }
@@ -73,7 +73,7 @@ void map_ranges_mod( me_mod *mod ) {
     void *map, *base;
     int i;
 
-    log(LOG_DEBUG, "loader", "text %p-%p\n", mod->text_base,
+    log(LOG_DEBUG, "loader", "text %p-%p", mod->text_base,
             mod->text_base+mod->text_size);
 
     map = mmap(
@@ -88,7 +88,7 @@ void map_ranges_mod( me_mod *mod ) {
 
 
 
-    log(LOG_DEBUG, "loader", "rodata %p-%p\n", mod->rodata_base,
+    log(LOG_DEBUG, "loader", "rodata %p-%p", mod->rodata_base,
             mod->rodata_base+mod->rodata_size);
 
     /*
@@ -103,7 +103,7 @@ void map_ranges_mod( me_mod *mod ) {
     */
 
 
-    log(LOG_DEBUG, "loader", "heap %p-%p\n", mod->heap_base,
+    log(LOG_DEBUG, "loader", "heap %p-%p", mod->heap_base,
             mod->heap_base+mod->heap_size);
     map = mmap(
             (void *) mod->heap_base,
@@ -115,7 +115,7 @@ void map_ranges_mod( me_mod *mod ) {
     logassert(map == (void *) mod->heap_base,
             "loader", "Could not map heap: %s", strerror( errno ) );
 
-    log(LOG_DEBUG, "loader", "bss %p-%p\n", mod->bss_base,
+    log(LOG_DEBUG, "loader", "bss %p-%p", mod->bss_base,
             mod->bss_base+mod->bss_size);
 
     map = mmap(
@@ -179,7 +179,7 @@ void populate_ranges_romlib( me_mod *mod, uintptr_t base ) {
 
 void map_ranges_lib( me_mod *mod ) {
     void *map;
-    log(LOG_DEBUG, "loader", "Mapping file %i to %p-%p\n",mod->mod_file,
+    log(LOG_DEBUG, "loader", "Mapping file %i to %p-%p",mod->mod_file,
             mod->load_base, mod->load_base+mod->load_size);
     map = mmap(
             (void *) mod->load_base,
@@ -211,12 +211,12 @@ me_mod *open_mod( const char *modname, int nomet ) {
 
     sprintf( path, "%s.mod", modname );
     mod->mod_file = open( path, O_RDONLY );
-    logassert( mod->mod_file >= 0, "loader", "Could not open module file: %s\n" );
+    logassert( mod->mod_file >= 0, "loader", "Could not open module file: %s" );
 
     if ( !nomet ) {
         sprintf(path, "%s.met", modname);
         mod->met_file = open(path, O_RDONLY);
-        logassert(mod->met_file >= 0, "loader", "Could not open manifest file: %s\n");
+        logassert(mod->met_file >= 0, "loader", "Could not open manifest file: %s");
 
         mod->met_size = filesz( mod->met_file );
         /* Module files are open */
@@ -227,7 +227,7 @@ me_mod *open_mod( const char *modname, int nomet ) {
                              MAP_PRIVATE,
                              mod->met_file,
                              0 );
-        logassert( mod->met_map != MAP_FAILED, "loader", "Could not map manifest: %s\n"  );
+        logassert( mod->met_map != MAP_FAILED, "loader", "Could not map manifest: %s"  );
     }
 
     return mod;
