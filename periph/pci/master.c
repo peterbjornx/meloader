@@ -213,7 +213,7 @@ int pci_bus_mem_write( pci_bus *bus, uint64_t addr, const void *out, int count, 
     pci_func *func;
     for ( lat = 0; lat < max_lat; lat++ ) {
         for ( func = bus->first_func; func; func = func->next )
-            if ( func->mem_write( func, addr, out, count, sai, lat ) == 0 )
+            if ( func->mem_write( func, addr, out, count, sai, lat ) >= 0 )
                 return 0;
     }
     return -1;

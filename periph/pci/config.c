@@ -12,7 +12,7 @@ void pci_cfg_handle_type0( pci_func *func, const cfg_section *section, int bit64
     cfg_find_int16(section, "vendor_id", &func->config.type0.vid );
     cfg_find_int16(section, "command"  , &func->config.type0.command );
     cfg_find_int16(section, "status",    &func->config.type0.status );
-    if ( bit64 ) {
+    if ( !bit64 ) {
         cfg_find_int32(section, "bar0", &func->config.type0.bar[0] );
         cfg_find_int32(section, "bar1", &func->config.type0.bar[1] );
         cfg_find_int32(section, "bar2", &func->config.type0.bar[2] );

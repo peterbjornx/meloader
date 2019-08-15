@@ -97,8 +97,8 @@ static int pci_simple_mem_read( pci_func *func, uint64_t addr,       void *buf, 
         if ( addr < base)
             continue;
         off = addr - base;
-        if ( off > sfunc->bar_size[bar] )
-            continue;
+        if ( off <= sfunc->bar_size[bar] )
+            break;
     }
 
     /* Check if the access hit one of our BARs */
@@ -156,8 +156,8 @@ static int pci_simple_mem_write( pci_func *func, uint64_t addr, const void *buf,
         if ( addr < base)
             continue;
         off = addr - base;
-        if ( off > sfunc->bar_size[bar] )
-            continue;
+        if ( off <= sfunc->bar_size[bar] )
+            break;
     }
 
     /* Check if the access hit one of our BARs */
