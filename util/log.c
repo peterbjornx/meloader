@@ -16,7 +16,7 @@ const char *level_names[]
 
 static void vlog( int level, const char *module, const char *format, va_list list ) {
 
-    if ( level > log_level ) {
+    if ( level >= log_level ) {
 
         mel_vsnprintf( log_buffer, 1024, format, list );
 
