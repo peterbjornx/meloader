@@ -2,10 +2,10 @@
 // Created by pbx on 05/04/19.
 //
 #include <string.h>
-#include <fsb.h>
+#include "fsb.h"
+#include "log.h"
 #include "user/meloader.h"
 #include "printf.h"
-#include "gasket/att.h"
 
 
 static mia_fsb *fsb;
@@ -65,12 +65,14 @@ void dma_read ( int lad, void *data, size_t count ) {
 void krnl_write_seg( int seg, int offset, const void *data, size_t count ) {
     int lad, v=0;
     krnl_deref_seg( seg, offset, count, &lad );
+    log(LOG_TRACE,"krnl","Write %08X count %i", lad, count);
     fsb->sa_mem_write( fsb->sa, lad, data, count );
 }
 
 void krnl_read_seg ( int seg, int offset, void *data, size_t count ) {
     int lad,v = 0;
     krnl_deref_seg( seg, offset, count, &lad );
+    log(LOG_TRACE,"krnl","read  %08X count %i", lad, count);
     fsb->sa_mem_read( fsb->sa, lad, data, count );
 }
 

@@ -53,6 +53,11 @@ int misa_aunit_may_complete( misa_inst *sa, int sai ) {
 }
 
 void misa_aunit_iommu_init( misa_inst *sa, const cfg_section *section ) {
+    int i;
+    char name[40];
     cfg_find_int32( section, "aiomctl", &sa->registers.aunit.AIOMCTL );
-
+    for ( i = 0; i < 8; i++ ) {
+        snprintf( name, 40, "acplmtx%i", i );
+        cfg_find_int32( section, name, &sa->registers.aunit.ACPLMTX[i] );
+    }
 }
