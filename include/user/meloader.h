@@ -73,20 +73,10 @@ void dma_write( int address, const void *data, size_t count );
 void dma_read ( int address, void *data, size_t count );
 
 void krnl_periph_reg( mmio_periph * periph );
-void tracehub_fake_probe();
-void tracehub_rs1_install();
 void sks_install();
 void spi_install();
 void spi_openimg( const char *path );
 int snowball_read( void *par );
 void snowball_add(const char *name, int unk0, int flags, int size, int unk1,
                   void *data);
-void hash_install();
-int hash_get_result( void *data, size_t count );
-int aes_get_result( void *data, size_t count );
-void hash_load_key( void *data, size_t count );
-void aes_load_key( void *data, size_t count );
-void aes_install();
-void fuse_install();
-void prtc_install();
 #endif
