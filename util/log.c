@@ -9,10 +9,10 @@
 
 char log_buffer[1024];
 
-int log_level = LOG_INFO;
+int log_level = LOG_DEBUG;
 
 const char *level_names[]
-    = {"TRACE", "DEBUG", "INFO ", "WARN ", "ERROR", "FATAL"};
+    = {"TRACE", "DEBUG", "INFO ", "WARN ", "ERROR", "FATAL", "METRC"};
 
 static void vlog( int level, const char *module, const char *format, va_list list ) {
 
