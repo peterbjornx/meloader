@@ -17,7 +17,6 @@ add_executable(meloader
         include/printf.h
         include/numfmt.h
         user/romlib/thunks.c
-        user/kernel/simple_io.c
         user/kernel/memory.c
         util/numfmt.c
         util/printf.c

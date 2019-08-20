@@ -3,7 +3,7 @@
 //
 
 #include "user/meloader.h"
-#include <stdio.h>
+#include "log.h"
 #include <string.h>
 
 me_mod *current_mod;
@@ -13,8 +13,7 @@ void krnl_set_current_mod(me_mod *mod) {
 }
 
 void start_thread( int n, void *args, size_t args_size ) {
-    fprintf(stderr,
-            "[info] Starting thread %i: entry = %p stack = %p\n",
+    log(LOG_INFO, "krnl", "Starting thread %i: entry = %p stack = %p",
             n,
             current_mod->threads[n].entry_point,
             current_mod->threads[n].stack_top);
@@ -39,7 +38,7 @@ int get_current_thread_id( void ) {
             return i;
     }
 
-    fprintf( stderr, "[kernel] Unknown thread: Unrecognised stack address %p.",
+    log(LOG_ERROR, "krnl", "Unknown thread: Unrecognised stack address %p.",
              stack );
 
     return -1;

@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include "log.h"
 #include "printf.h"
 #include "grant.h"
 
@@ -47,7 +48,7 @@ void dump_mglist()
 }
 int sys_mg_synclist( mg_synclist_par *par )
 {
-    mel_printf("[krnl] sys_mg_synclist( 0x%08x, %i )\n", par->desc, par->size);
+    log(LOG_DEBUG, "krnl", "sys_mg_synclist( 0x%08x, %i )", par->desc, par->size);
     mg_list = par->desc;
     mg_count = par->size;
     return 0;

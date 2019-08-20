@@ -47,7 +47,7 @@ void snowball_add(const char *name, int unk0, int flags, int size, int unk1,
 int snowball_read(handoff_read_pars *par) {
     int turnsize = par->size;
     int avail = snowball_wrptr - snowball_rdptr;
-    mel_printf("[krnl] sys_snowball_read( %i, %p, %i )\n",
+    log(LOG_TRACE, "krnl", "sys_snowball_read( %i, %p, %i )",
             par->size,par->buffer,par->size2);
     par->actualsize = 0;
     if ( par->size != par->size2 )

@@ -3,6 +3,7 @@
 //
 #include <stdint.h>
 #include <grant.h>
+#include <log.h>
 #include "printf.h"
 
 typedef struct __attribute__((packed)) {
@@ -26,8 +27,8 @@ typedef struct __attribute__((packed)) {
 int sys_dma_lock_ex( sys_dma_lock_ex_par *par ) {
     mg_desc_t *entry;
     entry = &mg_list[par->grant];
-    //mel_printf("[krnl] sys_dma_lock_ex( tid=0x%04x, grant=%i, size=0x%08x )\n",
-     //       par->tid, par->grant, par->size);
+    log(LOG_TRACE, "krnl", "sys_dma_lock_ex( tid=0x%04x, grant=%i, size=0x%08x )",
+            par->tid, par->grant, par->size);
     par->ref_out = 0x42;//ID
     par->address_out = entry->buffer;//Address
     par->par7 = 0x37;
@@ -35,6 +36,6 @@ int sys_dma_lock_ex( sys_dma_lock_ex_par *par ) {
 }
 
 int sys_dma_unlock( int *par ) {
-   // mel_printf("[krnl] sys_dma_unlock(0x%08x)\n",*par);
+    log(LOG_TRACE, "krnl", "sys_dma_unlock(0x%08x)",*par);
     return 0;
 }
