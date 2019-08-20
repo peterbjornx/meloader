@@ -18,6 +18,7 @@ typedef struct {
     sks_inst sks;
     ocs_hash hash;
     ocs_aes aes;
+    uint32_t sai;
 } ocs_inst;
 
 #endif //MELOADER_DEV_H

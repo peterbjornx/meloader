@@ -50,12 +50,12 @@ void gpdma_run_transaction( gpdma_state *state ) {
         if (turnsize > sizeof gpdma_buffer)
             turnsize = sizeof gpdma_buffer;
         if ( state->src_addr ) {
-            dma_read(state->src_addr + pos, gpdma_buffer, (size_t) turnsize);
+            state->bus_read(state->bus_impl, state->src_addr + pos, gpdma_buffer, (size_t) turnsize);
         } else {
             state->int_read(state->impl, gpdma_buffer, (uint32_t) turnsize);
         }
         if ( state->dst_addr ) {
-            dma_write(state->dst_addr + pos, gpdma_buffer, (size_t) turnsize);
+            state->bus_write(state->bus_impl, state->dst_addr + pos, gpdma_buffer, (size_t) turnsize);
         } else {
             state->int_write(state->impl, gpdma_buffer, (uint32_t) turnsize);
         }
