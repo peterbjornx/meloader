@@ -125,13 +125,13 @@ void hash_hmac_round1_init(ocs_hash *h) {
 void hash_do_command( ocs_hash *h, uint32_t cmd ) {
     switch ( cmd ) {
         case HASH_CMD_START_DATA:
-            //mel_printf("[hash] Start data index:%i pos:%i", hash_count, hash_count & 63);
+            log(LOG_TRACE, h->name, "Start data index:%i pos:%i", h->hash_count, h->hash_count & 63);
             h->hash_count &= ~63;
             if ( h->hash_mode & HASH_MODE_HMAC )
                 hash_hmac_round1_init(h);
             break;
         case HASH_CMD_FLUSH_DATA:
-            //mel_printf("[hash] Flush data index:%i pos:%i", hash_count, hash_count & 63);
+            log(LOG_TRACE, h->name, "Flush data index:%i pos:%i", h->hash_count, h->hash_count & 63);
             hash_round_finish(h,0);
             break;
         default:
@@ -184,7 +184,7 @@ int hash_read( ocs_hash *h, int addr, void *buffer, int count ) {
             return 1;
         }
         memcpy(buffer, h->hash_state + h->hash_stateptr, (size_t) count);
-        //mel_printf("[hash] read hash count:%i val: 0x%08x", count, *buf);
+        log(LOG_TRACE, h->name, "read hash count:%i val: 0x%08x", count, *buf);
         h->hash_stateptr += count;
     } else if ( !gpdma_read( &h->hash_gpdma, addr, buffer, count) )
         log(LOG_ERROR, h->name, "read  unknown 0x%03x count:%i val: 0x%08x", addr, count, *buf);
@@ -199,23 +199,23 @@ int hash_write( ocs_hash *h, int addr, const void *buffer, int count ) {
         hash_dma_write( h, buffer, count );
         return 1;
     } else if ( count != 4 || (addr & 3) ) {
-        //mel_printf("[hash] write misaligned 0x%03x count:%i", addr, count);
+        log(LOG_ERROR, h->name, "write misaligned 0x%03x count:%i", addr, count);
         return 1;
     }
     if ( addr == HASH_REG_MODE ) {
-        //mel_printf("[hash] write MODE 0x%08x", *buf);
+        log(LOG_TRACE, h->name, "write MODE 0x%08x", *buf);
         h->hash_mode = *buf;
         h->hash_stateptr = 0;
         hash_round_init(h);
     } else if ( addr == HASH_REG_CMD ) {
-        //mel_printf("[hash] write CMD 0x%08x", *buf);
+        log(LOG_TRACE, h->name, "write CMD 0x%08x", *buf);
         hash_do_command( h, *buf );
     } else if ( addr == HASH_REG_HASH ) {
         if ( h->hash_stateptr + count > 32 ) {
             log(LOG_ERROR, h->name, "bad state write off:%i count:%i", addr, count);
             return 1;
         }
-        //mel_printf("[hash] write hash count:%i val: 0x%08x", count, *buf);
+        log(LOG_TRACE, h->name, "write hash count:%i val: 0x%08x", count, *buf);
         memcpy( h->hash_state + h->hash_stateptr, buffer, (size_t) count);
         h->hash_stateptr += count;
     } else if ( addr == HASH_REG_COUNTL ) {
@@ -235,7 +235,6 @@ int hash_write( ocs_hash *h, int addr, const void *buffer, int count ) {
 
 void hash_dma_read( ocs_hash *h, void *data, size_t size ) {
     log(LOG_ERROR, h->name, "bad dma read from hash!!!");
-
 }
 
 void hash_load_key( ocs_hash *h, void *data, size_t count ) {
@@ -248,13 +247,12 @@ int hash_get_result( ocs_hash *h, void *data, size_t count ){
     return 1;
 }
 
-
 void hash_init( device_instance *parent, ocs_hash *h ) {
     char name[160];
     memset( h, 0, sizeof(ocs_hash) );
     snprintf( name, 160, "%s_hcu", parent->name );
-    h->name = strdup(name);
     gpdma_init( &h->hash_gpdma );
+    h->name = strdup(name);
     h->hash_gpdma.impl = h;
     h->hash_gpdma.int_read = hash_dma_read;
     h->hash_gpdma.int_write = hash_dma_write;

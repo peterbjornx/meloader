@@ -76,7 +76,7 @@ void sks_do_operation( sks_inst *sks ) {
         return;
     sks->sks_command &= ~SKS_CMD_ALWAYS_SET; //XXX: Guessed this bit is a GO bit
     sks->sks_status  |=  SKS_STS_BUSY;
-    if ( sks->sks_slot < 0 || sks->sks_slot >= 22 )
+    if ( sks->sks_slot < 0 || sks->sks_slot > 22 )
         goto err;
     keysize = sks->sks_slot >= 11 ? 32 : 16;
     if ( sks->sks_command & SKS_CMD_PRODUCE ) {
@@ -131,9 +131,9 @@ void sks_init( device_instance *parent, sks_inst *sks ) {
         sks->sks_keys[i].key_data = sks->sks_keystore + 16 * i;
         sks->sks_keys[i].key_atr1 = 0;
     }
-    for ( i = 11; i < 22; i++ ) {
-        sks->sks_keys[i].key_data = sks->sks_keystore + 16 * 11 + 32 * i;
-        sks->sks_keys[i].key_atr1 = 0;
+    for ( i = 0; i < 11; i++ ) {
+        sks->sks_keys[i + 11].key_data = sks->sks_keystore + 16 * 11 + 32 * i;
+        sks->sks_keys[i + 11].key_atr1 = 0;
     }
     //TODO: Add configuration for initial key slot values
     sks->sks_keys[21].key_atr1 |= SKS_ATR1_KEY_VALID;

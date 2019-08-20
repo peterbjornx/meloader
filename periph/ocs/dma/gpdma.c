@@ -9,7 +9,7 @@ int gpdma_read( gpdma_state *state, int addr, void *buffer, int count ) {
         return 0;
     if ( count != 4 || (addr & 3) ) {
         log(LOG_ERROR, "gpdma",
-                "read misaligned 0x%03x count:%i\n", addr, count);
+                "read misaligned 0x%03x count:%i", addr, count);
         return 1;
     }
     if ( addr == GPDMA_REG_SRC_ADDR )
@@ -22,12 +22,12 @@ int gpdma_read( gpdma_state *state, int addr, void *buffer, int count ) {
         *buf = state->dst_size;
     else if ( addr == GPDMA_REG_CONTROL ) {
         *buf = state->control;
-        log(LOG_TRACE, "gpdma", "read control: 0x%08x\n", *buf);
+        log(LOG_TRACE, "gpdma", "read control: 0x%08x", *buf);
     } else if ( addr == GPDMA_REG_STATUS ) {
         *buf = state->status;
-        log(LOG_DEBUG, "gpdma", "read status : 0x%08x\n", *buf);
+        log(LOG_DEBUG, "gpdma", "read status : 0x%08x", *buf);
     } else
-        log(LOG_ERROR, "gpdma", "read  0x%03x count:%i\n", addr, count);
+        log(LOG_ERROR, "gpdma", "read  0x%03x count:%i", addr, count);
     return 1;
 
 }
@@ -43,7 +43,7 @@ void gpdma_run_transaction( gpdma_state *state ) {
     if ( state->dst_size > count )
         count = state->dst_size;
     pos = 0;
-    log(LOG_TRACE, "gpdma", "Run transaction src:0x%08x dst:0x%08x sz:0x%08x\n",
+    log(LOG_TRACE, "gpdma", "Run transaction src:0x%08x dst:0x%08x sz:0x%08x",
             state->src_addr, state->dst_size, count);
     while ( count ) {
         turnsize = count;
@@ -71,7 +71,7 @@ int gpdma_write( gpdma_state *state, int addr, const void *buffer, int count ) {
         return 0;
     if ( count != 4 || (addr & 3) ) {
         log(LOG_ERROR, "gpdma",
-            "write misaligned 0x%03x count:%i\n", addr, count);
+            "write misaligned 0x%03x count:%i", addr, count);
         return 1;
     }
     if ( addr == GPDMA_REG_SRC_ADDR )
@@ -84,11 +84,11 @@ int gpdma_write( gpdma_state *state, int addr, const void *buffer, int count ) {
         state->dst_size = *buf;
     else if ( addr == GPDMA_REG_CONTROL ) {
         state->control = *buf;
-        //mel_printf("[gdma] write control: 0x%08x\n", *buf);
+        //mel_printf("[gdma] write control: 0x%08x", *buf);
     } else if ( addr == GPDMA_REG_STATUS )
         state->status = *buf;
     else
-        log(LOG_ERROR, "gpdma", "read  0x%03x count:%i\n", addr, count);
+        log(LOG_ERROR, "gpdma", "read  0x%03x count:%i", addr, count);
     gpdma_run_transaction( state );
     return 1;
 }

@@ -8,6 +8,7 @@
 #include "pci/bus.h"
 #include "ocs/dev.h"
 #include "ocs/sks.h"
+#include "ocs/aes.h"
 
 static int ocs_cfg_read( pci_func *func, uint64_t addr,       void *out, int count )
 {
@@ -133,6 +134,8 @@ static int ocs_mem_write( pci_func *func, uint64_t addr, const void *buf, int co
     addr = addr & 0x0FFFu;
 
     switch ( unit ) {
+        case 0x8000:
+            return aes_write( &i->aes, addr, buf, count );
         case 0xB000:
             return hash_write( &i->hash, addr, buf, count );
         case 0xF000:
@@ -194,6 +197,8 @@ static int ocs_mem_read( pci_func *func, uint64_t addr,       void *buf, int cou
     addr = addr & 0x0FFFu;
 
     switch ( unit ) {
+        case 0x8000:
+            return aes_read( &i->aes, addr, buf, count );
         case 0xB000:
             return hash_read( &i->hash, addr, buf, count );
         case 0xF000:
@@ -258,9 +263,13 @@ static device_instance * ocs_spawn(const cfg_file *file, const cfg_section *sect
 
     sks_init( &i->self, &i->sks );
     hash_init( &i->self, &i->hash );
+    aes_init( &i->self, &i->aes, 'a' );
     i->sks.hash = &i->hash;
     i->sks.hash_get_result = hash_get_result;
     i->sks.hash_load_key = hash_load_key;
+    i->sks.aes_get_result = aes_get_result;
+    i->sks.aes_load_key = aes_load_key;
+
 
     return &i->self;
 }
