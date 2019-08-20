@@ -73,9 +73,6 @@ void dma_write( int address, const void *data, size_t count );
 void dma_read ( int address, void *data, size_t count );
 
 void krnl_periph_reg( mmio_periph * periph );
-void sks_install();
-void spi_install();
-void spi_openimg( const char *path );
 int snowball_read( void *par );
 void snowball_add(const char *name, int unk0, int flags, int size, int unk1,
                   void *data);
