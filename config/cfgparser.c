@@ -624,3 +624,21 @@ int cfg_find_int16( const cfg_section *section, const char *name, uint16_t *out 
     *out = cur->int64;
     return 0;
 }
+/**
+ * Looks up a 8 bit integer entry from a config section by name
+ * @param section The section to search
+ * @param name The section name to look for
+ * @param out  The integer value, by reference
+ * @return Zero if successful or negative in the case of error
+ */
+int cfg_find_int8( const cfg_section *section, const char *name, uint8_t *out ) {
+    cfg_entry *cur;
+    for (  cur = section->first_entry; cur; cur = cur->next ) {
+        if ( strcmp( cur->name, name ) == 0 )
+            break;
+    }
+    if ( !cur || cur->type != CONFIG_TYPE_INT64 )
+        return -1;
+    *out = cur->int64;
+    return 0;
+}
