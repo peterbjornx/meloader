@@ -49,11 +49,6 @@ typedef struct {
     };
 } me_mod;
 
-typedef struct {
-    int (*write)( int addr, const void *buffer, int count );
-    int (*read )( int addr, void *buffer, int count );
-} mmio_periph;
-
 void *get_esp( void );
 
 void switch_stack( void *entry, void *s_top );
@@ -72,7 +67,6 @@ void krnl_set_cpu( device_instance *_cpu );
 void dma_write( int address, const void *data, size_t count );
 void dma_read ( int address, void *data, size_t count );
 
-void krnl_periph_reg( mmio_periph * periph );
 int snowball_read( void *par );
 void snowball_add(const char *name, int unk0, int flags, int size, int unk1,
                   void *data);
