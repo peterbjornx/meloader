@@ -19,6 +19,7 @@ typedef struct{
     device_instance *cpu;
     int              sai;
     uint64_t         bdf;
+    int              bunit_user;
 } misa_inst;
 
 void misa_fsb_mem_write( device_instance *sa, uint32_t addr, const void *buffer, size_t size );
