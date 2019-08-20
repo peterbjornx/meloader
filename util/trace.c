@@ -1,6 +1,9 @@
 //
 // Created by pbx on 15/04/19.
 //
+#include "log.h"
+#include <string.h>
+#include <stdlib.h>
 #include "mipitrace.h"
 #include "printf.h"
 
@@ -17,6 +20,23 @@ int tbuf_pos = 0;
 
 struct th_msg tbuf_msgs[TRACEBUF_SIZE];
 
+static void print_multiline( const char *module, const char *str ) {
+    char *buf = strdup(str);
+    char *t;
+    if (!module)
+        module = "sven";
+    while ( str ) {
+        t = strchr(str, '\n');
+        if ( t )
+            *t = 0;
+        if ( *str )
+            log( LOG_METRC, module, "%s", str );
+        str = t;
+    }
+    t = strchr(buf,'\n');
+    free(buf);
+}
+
 void sven_decode(int master, int channel, int header, int size, char *data) {
     int type = header & 0xF;
     int severity = (header >> 4) & 0x7;
@@ -26,10 +46,11 @@ void sven_decode(int master, int channel, int header, int size, char *data) {
     switch( type ) {
         case 2:
             data[size] = 0;
-            mel_printf("[sven] debug_string sev:%02x unit:%02x module:%02x sub:%02x\n[sven] %s", severity, unit, module,subtype, data);
+            log(LOG_TRACE, "sven", "debug_string sev:%02x unit:%02x module:%02x sub:%02x", severity, unit, module,subtype);
+            print_multiline( NULL, data );
             break;
         case 3:
-            mel_printf("[sven] catalog_msg  sev:%02x unit:%02x module:%02x sub:%02x %08x%08x\n", severity, unit, module,subtype, *(uint32_t *)(data+8), *(uint32_t *)(data));
+            log(LOG_METRC, "sven", "catalog_msg  sev:%02x unit:%02x module:%02x sub:%02x %08x%08x", severity, unit, module,subtype, *(uint32_t *)(data+8), *(uint32_t *)(data));
             break;
 
     }
@@ -44,25 +65,25 @@ void trace_decode() {
     if (tbuf_msgs[tbuf_pos - 1].type != MT_FLAG)
         return;
     if (tbuf_msgs[0].type != MT_DnTS) {
-        mel_printf("[mipi] Trace packet did not start with DnTS\n");
+        log(LOG_ERROR, "mipi", "Trace packet did not start with DnTS\n");
         tbuf_pos = 0;
         return;
     } else if (tbuf_msgs[0].size != 4) {
-        mel_printf("[mipi] Trace packet did not start with 32 bit pkt\n");
+        log(LOG_ERROR, "mipi", "Trace packet did not start with 32 bit pkt\n");
         tbuf_pos = 0;
         return;
     } else if (tbuf_msgs[1].size != 2) {
-        mel_printf("[mipi] Trace packet size is not 16 bit\n");
+        log(LOG_ERROR, "mipi", "Trace packet size is not 16 bit\n");
         tbuf_pos = 0;
         return;
     } else if (tbuf_msgs[tbuf_pos - 1].d32) {
-        mel_printf("[mipi] Trace flags is not zero\n");
+        log(LOG_ERROR, "mipi", "Trace flags is not zero\n");
         tbuf_pos = 0;
         return;
     }
     type = tbuf_msgs[0].d32;
     size = tbuf_msgs[1].d16;
-    mel_printf("[mipi] Packet from %i:%i with type 0x%08X and size %i\n",
+    log(LOG_TRACE, "mipi", "Packet from %i:%i with type 0x%08X and size %i\n",
                tbuf_master,tbuf_channel,type,size);
     ipos = 2;
     while ( (dpos+4) <= size ) {

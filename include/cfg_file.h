@@ -52,5 +52,7 @@ const cfg_entry *cfg_find_entry( const cfg_section *section, const char *name );
 const char *cfg_find_string( const cfg_section *section, const char *name );
 int cfg_find_int64( const cfg_section *section, const char *name, uint64_t *out );
 int cfg_find_int32( const cfg_section *section, const char *name, uint32_t *out );
+int cfg_find_int16( const cfg_section *section, const char *name, uint16_t *out );
+int cfg_find_int8( const cfg_section *section, const char *name, uint8_t *out );
 
 #endif //MELOADER_CFG_FILE_H

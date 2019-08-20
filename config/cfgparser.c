@@ -391,7 +391,7 @@ static cfg_section *accept_section( ) {
     ensure_mem( section );
     accept_whitespace();
     expect_char( '{' );
-    section->type = name;
+    section->type = type;
     section->name = name;
     section->first_entry = 0;
     do {
@@ -474,7 +474,7 @@ static cfg_file *accept_file( ) {
 cfg_file *load_config( const char *path ) {
     cfg_file *file;
     cfg_file *include;
-    cfg_section *section;
+    cfg_section *section, *next_section;
     cfg_section *insert_point;
     cfg_entry *entry;
 
@@ -495,7 +495,8 @@ cfg_file *load_config( const char *path ) {
     fclose( parse_input );
     parse_input = NULL;
 
-    for ( section = file->first_section; section; section = section->next ) {
+    for ( section = file->first_section; section; section = next_section ) {
+        next_section = section->next;
         if ( strcmp(section->type, "include") != 0 )
             continue;
         insert_point = section;
@@ -507,8 +508,8 @@ cfg_file *load_config( const char *path ) {
             }
             include = load_config( entry->string );
             if ( include->first_section ) {
+                include->last_section->next = insert_point->next;
                 insert_point->next = include->first_section;
-                include->last_section = insert_point->next;
                 insert_point = include->last_section;
             }
             free(include);
@@ -594,6 +595,43 @@ int cfg_find_int64( const cfg_section *section, const char *name, uint64_t *out 
  * @return Zero if successful or negative in the case of error
  */
 int cfg_find_int32( const cfg_section *section, const char *name, uint32_t *out ) {
+    cfg_entry *cur;
+    for (  cur = section->first_entry; cur; cur = cur->next ) {
+        if ( strcmp( cur->name, name ) == 0 )
+            break;
+    }
+    if ( !cur || cur->type != CONFIG_TYPE_INT64 )
+        return -1;
+    *out = cur->int64;
+    return 0;
+}
+
+/**
+ * Looks up a 16 bit integer entry from a config section by name
+ * @param section The section to search
+ * @param name The section name to look for
+ * @param out  The integer value, by reference
+ * @return Zero if successful or negative in the case of error
+ */
+int cfg_find_int16( const cfg_section *section, const char *name, uint16_t *out ) {
+    cfg_entry *cur;
+    for (  cur = section->first_entry; cur; cur = cur->next ) {
+        if ( strcmp( cur->name, name ) == 0 )
+            break;
+    }
+    if ( !cur || cur->type != CONFIG_TYPE_INT64 )
+        return -1;
+    *out = cur->int64;
+    return 0;
+}
+/**
+ * Looks up a 8 bit integer entry from a config section by name
+ * @param section The section to search
+ * @param name The section name to look for
+ * @param out  The integer value, by reference
+ * @return Zero if successful or negative in the case of error
+ */
+int cfg_find_int8( const cfg_section *section, const char *name, uint8_t *out ) {
     cfg_entry *cur;
     for (  cur = section->first_entry; cur; cur = cur->next ) {
         if ( strcmp( cur->name, name ) == 0 )

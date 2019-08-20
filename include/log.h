@@ -11,7 +11,10 @@
 #define LOG_WARN  (3)
 #define LOG_ERROR (4)
 #define LOG_FATAL (5)
+#define LOG_METRC (6)
 
 void log( int level, const char *module, const char *format, ...);
+void fatal( const char *module, const char *format, ...);
+void logassert( int cond, const char *module, const char *format, ... );
 
 #endif //MELOADER_LOG_H
