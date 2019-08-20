@@ -92,6 +92,7 @@ void pci_func_register( pci_bus *bus, pci_func *func ) {
     }
     func->bdf &= PCI_BDF_DF_MASK;
     func->bdf |= PCI_PACK_BDF( bus->bus_num, 0u, 0u );
+    func->bus = bus;
     func->next = bus->first_func;
     bus->first_func = func;
 }
