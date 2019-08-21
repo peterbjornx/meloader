@@ -25,7 +25,7 @@ int gpdma_read( gpdma_state *state, int addr, void *buffer, int count ) {
         log(LOG_TRACE, "gpdma", "read control: 0x%08x", *buf);
     } else if ( addr == GPDMA_REG_STATUS ) {
         *buf = state->status;
-        log(LOG_DEBUG, "gpdma", "read status : 0x%08x", *buf);
+        log(LOG_TRACE, "gpdma", "read status : 0x%08x", *buf);
     } else
         log(LOG_ERROR, "gpdma", "read  0x%03x count:%i", addr, count);
     return 1;
