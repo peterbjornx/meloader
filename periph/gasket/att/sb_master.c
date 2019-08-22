@@ -30,9 +30,7 @@ int att_sb_read( att_inst *att, int addr, void *buffer, int count, int sai ) {
         endp = win->sb_address & 0xFF;
         bar  = (win->sb_address >> 24) & 0x7;
         base = win->window_base;
-        //TODO: Add SAI
-        sb_read( endp, bar, addr - base, buffer, count );
-        return 1;
+        return sb_read( endp, bar, addr - base, buffer, count, sai );
     } else
         return -1;
 }
@@ -45,9 +43,7 @@ int att_sb_write( att_inst *att, int addr, const void *buffer, int count, int sa
         endp = win->sb_address & 0xFF;
         bar  = (win->sb_address >> 24) & 0x7;
         base = win->window_base;
-        //TODO: Add SAI
-        sb_write( endp, bar, addr - base, buffer, count );
-        return 1;
+        return sb_write( endp, bar, addr - base, buffer, count, sai );
     } else
         return -1;
 }
