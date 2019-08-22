@@ -17,6 +17,9 @@ device_instance * misa_spawn(const cfg_file *file, const cfg_section *section) {
     }
     memset( i, 0, sizeof(misa_inst) );
 
+    i->bunit_user = 0;
+    cfg_find_int32( section, "bunit_usermode", (uint32_t *) &i->bunit_user );
+
     i->self.impl = i;
     i->self.name = section->name;
 

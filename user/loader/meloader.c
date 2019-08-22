@@ -75,6 +75,8 @@ void load_module( const cfg_section *section ) {
 
 }
 
+void sven_load( const char *path );
+
 int main( int argc, char **argv ) {
     cfg_file *cfg;
     const char *str;
@@ -123,8 +125,10 @@ int main( int argc, char **argv ) {
     logassert( section != NULL, "loader", "Could not find CPU %s", str );
     
     krnl_set_cpu( cpu );
-    
-    
+
+    str = cfg_find_string( loader, "svendict" );
+    if ( str )
+        sven_load( str );
 
     krnl_set_current_mod( module );
     

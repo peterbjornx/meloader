@@ -383,6 +383,8 @@ static cfg_section *accept_section( ) {
         return NULL;
     accept_whitespace();
     name = accept_name();
+    if (!name)
+        name = accept_string();
     if ( !name ) {
         log( LOG_FATAL, "config", "Expected a valid name" );
         exit(EXIT_FAILURE);

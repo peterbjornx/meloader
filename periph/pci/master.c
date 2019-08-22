@@ -92,6 +92,7 @@ void pci_func_register( pci_bus *bus, pci_func *func ) {
     }
     func->bdf &= PCI_BDF_DF_MASK;
     func->bdf |= PCI_PACK_BDF( bus->bus_num, 0u, 0u );
+    func->bus = bus;
     func->next = bus->first_func;
     bus->first_func = func;
 }
@@ -189,7 +190,7 @@ int pci_bus_mem_read( pci_bus *bus, uint64_t addr, void *out, int count, int sai
     for ( lat = 0; lat < max_lat; lat++ ) {
         for ( func = bus->first_func; func; func = func->next ) {
             csai = func->mem_read(func, addr, out, count, sai, lat);
-            if ( csai >= 0 )
+            if ( csai >= 0 || csai < -1 )
                 return csai;
         }
     }
@@ -209,12 +210,14 @@ int pci_bus_mem_read( pci_bus *bus, uint64_t addr, void *out, int count, int sai
  * @return >= 0 when successful
  */
 int pci_bus_mem_write( pci_bus *bus, uint64_t addr, const void *out, int count, int sai, int max_lat ) {
-    int lat = 0;
+    int lat = 0, s;
     pci_func *func;
     for ( lat = 0; lat < max_lat; lat++ ) {
-        for ( func = bus->first_func; func; func = func->next )
-            if ( func->mem_write( func, addr, out, count, sai, lat ) >= 0 )
-                return 0;
+        for ( func = bus->first_func; func; func = func->next ) {
+            s = func->mem_write(func, addr, out, count, sai, lat);
+            if ( s >= 0 || s < -1 )
+                return s;
+        }
     }
     return -1;
 }

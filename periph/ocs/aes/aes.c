@@ -16,7 +16,7 @@ int aes_read( ocs_aes *a, int addr, void *buffer, int count ) {
         return 0;
     if ( addr == 0x05c)
         *buf = 2;
-    log(LOG_ERROR, a->name, "read  unknown 0x%03x count:%i val: 0x%08x", addr, count, *buf);
+    log(LOG_TRACE, a->name, "read  unknown 0x%03x count:%i val: 0x%08x", addr, count, *buf);
     return 1;
 }
 
@@ -25,7 +25,7 @@ int aes_write( ocs_aes *a, int addr, const void *buffer, int count ) {
     int i;
     if ( addr < 0 || addr >= AES_SIZE )
         return 0;
-    log(LOG_ERROR, a->name, "write unknown 0x%03x count:%i val: 0x%08x", addr, count, *buf);
+    log(LOG_TRACE, a->name, "write unknown 0x%03x count:%i val: 0x%08x", addr, count, *buf);
     return 1;
 }
 void aes_dma_write( ocs_aes *h, const void *buffer, size_t count ) {

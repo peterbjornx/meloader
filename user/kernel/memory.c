@@ -15,13 +15,6 @@ void krnl_set_cpu( device_instance *_cpu ) {
     cpu = _cpu;
 }
 
-int peripheral_count = 0;
-mmio_periph *peripheral_list[64];
-
-void krnl_periph_reg( mmio_periph * periph ) {
-    peripheral_list[peripheral_count++] = periph;
-}
-
 void krnl_deref_seg( int seg, int offset, size_t count, int *lad ) {
     if ( (seg & 4) != 4 )
         return;//TODO: Support GDT
@@ -36,30 +29,14 @@ fault:
     *((volatile int *)NULL) = 0xDEADBEEF;
 }
 
-int periph_write( int lad, const void *data, size_t count) {
-    int v = 0;
-    for ( int i = 0; i < peripheral_count; i++ )
-        v |= peripheral_list[i]->write( lad, data, count );
-    return v;
-}
-
-int periph_read ( int lad, void *data, size_t count ){
-    int v = 0;
-    for ( int i = 0; i < peripheral_count; i++ )
-        v |= peripheral_list[i]->read( lad, data, count );
-    return v;
-}
-
 void dma_write( int lad, const void *data, size_t count ) {
-    if (!periph_write(lad, data, count))
-        memcpy( lad, data, count );
-
+    log(LOG_FATAL, "krnl", "Using old DMA framework!");
+    exit(EXIT_FAILURE);
 }
 
 void dma_read ( int lad, void *data, size_t count ) {
-    if (!periph_read (lad, data, count))
-        memcpy( data, lad, count );
-
+    log(LOG_FATAL, "krnl", "Using old DMA framework!");
+    exit(EXIT_FAILURE);
 }
 
 void krnl_write_seg( int seg, int offset, const void *data, size_t count ) {

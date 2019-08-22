@@ -4,6 +4,7 @@
 #include "log.h"
 #include <string.h>
 #include <stdlib.h>
+#include "cfg_file.h"
 #include "mipitrace.h"
 #include "printf.h"
 
@@ -37,6 +38,31 @@ static void print_multiline( const char *module, const char *str ) {
     free(buf);
 }
 
+static cfg_file *sven_file = NULL;
+static char buffer[40];
+static char sven_buffer[640];
+
+void sven_load( const char *path ) {
+    sven_file = load_config( path );
+}
+
+void sven_getfmt( char *data ) {
+    const cfg_section *msg = NULL;
+    const char *fmt = NULL;
+    uint32_t id_low = *( uint32_t * ) ( data );
+    uint32_t id_high = *( uint32_t * ) ( data + 4);
+    mel_snprintf( buffer, 40, "msg_0x%08x%08x", id_high, id_low );
+    if ( sven_file )
+        msg = cfg_find_section( sven_file, buffer );
+    if ( msg )
+        fmt = cfg_find_string( msg, "message" );
+    if ( !fmt )
+        mel_vsnprintf( sven_buffer, 640, "%08X%08X%08X", data );
+    else
+        mel_vsnprintf( sven_buffer, 640, fmt, data + 8 );
+    print_multiline( NULL, sven_buffer );
+}
+
 void sven_decode(int master, int channel, int header, int size, char *data) {
     int type = header & 0xF;
     int severity = (header >> 4) & 0x7;
@@ -50,7 +76,8 @@ void sven_decode(int master, int channel, int header, int size, char *data) {
             print_multiline( NULL, data );
             break;
         case 3:
-            log(LOG_METRC, "sven", "catalog_msg  sev:%02x unit:%02x module:%02x sub:%02x %08x%08x", severity, unit, module,subtype, *(uint32_t *)(data+8), *(uint32_t *)(data));
+            log(LOG_TRACE, "sven", "catalog_msg  sev:%02x unit:%02x module:%02x sub:%02x %08x%08x", severity, unit, module,subtype, *(uint32_t *)(data+4), *(uint32_t *)(data));
+            sven_getfmt( data );
             break;
 
     }
@@ -65,25 +92,25 @@ void trace_decode() {
     if (tbuf_msgs[tbuf_pos - 1].type != MT_FLAG)
         return;
     if (tbuf_msgs[0].type != MT_DnTS) {
-        log(LOG_ERROR, "mipi", "Trace packet did not start with DnTS\n");
+        log(LOG_ERROR, "mipi", "Trace packet did not start with DnTS");
         tbuf_pos = 0;
         return;
     } else if (tbuf_msgs[0].size != 4) {
-        log(LOG_ERROR, "mipi", "Trace packet did not start with 32 bit pkt\n");
+        log(LOG_ERROR, "mipi", "Trace packet did not start with 32 bit pkt");
         tbuf_pos = 0;
         return;
     } else if (tbuf_msgs[1].size != 2) {
-        log(LOG_ERROR, "mipi", "Trace packet size is not 16 bit\n");
+        log(LOG_ERROR, "mipi", "Trace packet size is not 16 bit");
         tbuf_pos = 0;
         return;
     } else if (tbuf_msgs[tbuf_pos - 1].d32) {
-        log(LOG_ERROR, "mipi", "Trace flags is not zero\n");
+        log(LOG_ERROR, "mipi", "Trace flags is not zero");
         tbuf_pos = 0;
         return;
     }
     type = tbuf_msgs[0].d32;
     size = tbuf_msgs[1].d16;
-    log(LOG_TRACE, "mipi", "Packet from %i:%i with type 0x%08X and size %i\n",
+    log(LOG_TRACE, "mipi", "Packet from %i:%i with type 0x%08X and size %i",
                tbuf_master,tbuf_channel,type,size);
     ipos = 2;
     while ( (dpos+4) <= size ) {
@@ -109,13 +136,13 @@ void trace_decode() {
 void trace_msg(int master, int chan, struct th_msg msg) {
 
     if (tbuf_pos > TRACEBUF_SIZE) {
-        mel_printf("[mipi] Trace buffer overflow, dropping packet!\n");
+        mel_printf("[mipi] Trace buffer overflow, dropping packet!");
         return;
     }
     if (tbuf_master != master || tbuf_channel != chan) {
         if (tbuf_master != -1)
             mel_printf(
-                    "[mipi] Dropping trace buffer because of interleaved masters\n");
+                    "[mipi] Dropping trace buffer because of interleaved masters");
         tbuf_pos = 0;
         tbuf_master = master;
         tbuf_channel = chan;

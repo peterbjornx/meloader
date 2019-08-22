@@ -32,7 +32,7 @@ static int p2g_cfg_write( pci_func *func, uint64_t addr, const void *out, int co
 static int p2g_mem_write( pci_func *func, uint64_t addr, const void *buf, int count, int sai, int lat ) {
     int s;
     p2g_inst *i = func->device->impl;
-    if ( (addr & 0xFF000000) == 0xF0000000 ) {
+    if ( (addr & 0xFF000000) == 0xF1000000 ) {
         s = pci_bus_config_write( &i->gasket_bus, addr & 0x00FFFFFFu, buf, count );
 
         return s;
@@ -44,7 +44,7 @@ static int p2g_mem_write( pci_func *func, uint64_t addr, const void *buf, int co
 static int p2g_mem_read( pci_func *func, uint64_t addr,       void *buf, int count, int sai, int lat ) {
     int s;
     p2g_inst *i = func->device->impl;
-    if ( (addr & 0xFF000000) == 0xF0000000 ) {
+    if ( (addr & 0xFF000000) == 0xF1000000 ) {
         s = pci_bus_config_read( &i->gasket_bus, addr & 0x00FFFFFFu, buf, count );
 
         return s;

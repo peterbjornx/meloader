@@ -90,7 +90,7 @@ static int ocs_cfg_write( pci_func *func, uint64_t addr, const void *out, int co
 }
 
 static int ocs_mem_write( pci_func *func, uint64_t addr, const void *buf, int count, int sai, int lat ) {
-    int bar;
+    int bar, s;
     uint32_t base, off, unit;
     ocs_inst *i = func->device->impl;
 
@@ -135,11 +135,14 @@ static int ocs_mem_write( pci_func *func, uint64_t addr, const void *buf, int co
 
     switch ( unit ) {
         case 0x8000:
-            return aes_write( &i->aes, addr, buf, count );
+            s = aes_write( &i->aes, addr, buf, count );
+            break;
         case 0xB000:
-            return hash_write( &i->hash, addr, buf, count );
+            s = hash_write( &i->hash, addr, buf, count );
+            break;
         case 0xF000:
-            return sks_write( &i->sks, addr, buf, count );
+            s = sks_write( &i->sks, addr, buf, count );
+            break;
         default:
 
             log( LOG_WARN,
@@ -150,10 +153,14 @@ static int ocs_mem_write( pci_func *func, uint64_t addr, const void *buf, int co
 
             return 0;
     }
+
+    if (!s)
+        return 0;
+    return i->sai;
 }
 
 static int ocs_mem_read( pci_func *func, uint64_t addr,       void *buf, int count, int sai, int lat ) {
-    int bar;
+    int bar, s;
     uint32_t base, off, unit;
     ocs_inst *i = func->device->impl;
 
@@ -198,11 +205,14 @@ static int ocs_mem_read( pci_func *func, uint64_t addr,       void *buf, int cou
 
     switch ( unit ) {
         case 0x8000:
-            return aes_read( &i->aes, addr, buf, count );
+            s = aes_read( &i->aes, addr, buf, count );
+            break;
         case 0xB000:
-            return hash_read( &i->hash, addr, buf, count );
+            s = hash_read( &i->hash, addr, buf, count );
+            break;
         case 0xF000:
-            return sks_read( &i->sks, addr, buf, count );
+            s = sks_read( &i->sks, addr, buf, count );
+            break;
         default:
 
             log( LOG_WARN,
@@ -213,6 +223,18 @@ static int ocs_mem_read( pci_func *func, uint64_t addr,       void *buf, int cou
 
             return 0;
     }
+
+    if (!s)
+        return 0;
+    return i->sai;
+}
+
+static int ocs_dma_read( ocs_inst *i, uint32_t addr, void *buffer, size_t count ) {
+    return pci_bus_mem_read( i->func.bus, addr, buffer, count, i->sai, 15 );
+}
+
+static int ocs_dma_write( ocs_inst *i, uint32_t addr, void *buffer, size_t count ) {
+    return pci_bus_mem_read( i->func.bus, addr, buffer, count, i->sai, 15 );
 }
 
 static device_instance * ocs_spawn(const cfg_file *file, const cfg_section *section) {
@@ -254,6 +276,11 @@ static device_instance * ocs_spawn(const cfg_file *file, const cfg_section *sect
         exit( EXIT_FAILURE );
     }
 
+    if ( cfg_find_int32( section, "sai", &i->sai ) < 0 || i->sai > 255 ) {
+        log( LOG_FATAL, section->name, "Missing or invalid SAI number" );
+        exit( EXIT_FAILURE );
+    }
+
     i->func.bdf    = i->bdf = PCI_PACK_BDF( bus_no, dev_no, func_no );
     i->func.device = &i->self;
 
@@ -269,7 +296,12 @@ static device_instance * ocs_spawn(const cfg_file *file, const cfg_section *sect
     i->sks.hash_load_key = hash_load_key;
     i->sks.aes_get_result = aes_get_result;
     i->sks.aes_load_key = aes_load_key;
-
+    i->hash.hash_gpdma.bus_impl = i;
+    i->hash.hash_gpdma.bus_read = ocs_dma_read;
+    i->hash.hash_gpdma.bus_write = ocs_dma_write;
+    i->aes.aes_gpdma.bus_impl = i;
+    i->aes.aes_gpdma.bus_read = ocs_dma_read;
+    i->aes.aes_gpdma.bus_write = ocs_dma_write;
 
     return &i->self;
 }

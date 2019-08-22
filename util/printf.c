@@ -382,7 +382,7 @@ int mel_sprintf( char *str, const char *format, ... )
  * @param ...		Varargs for values
  * @see vpprintf
  */
-int snprintf( char *str, size_t size, const char *format, ... )
+int mel_snprintf( char *str, size_t size, const char *format, ... )
 {
     int result;
     va_list list;
