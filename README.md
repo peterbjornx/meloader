@@ -1,8 +1,8 @@
 # meloader
 Linux i386 tool to load and execute ME modules.
 
-The code as initially presented here is not guaranteed to work or even compile and is released 
-under the GPLv2. (I reused code from an earlier project under that license) 
+The code as initially presented here is released under the GPLv2. 
+(I reused code from an earlier project under that license) 
 A commit adding license headers will soon follow.
 
 Much of the later achievements demoed using this project were done on a local branch which
@@ -13,7 +13,9 @@ understanding of the ME hardware.
 Running the tool requires mmaping addresses from 0x1000 onward and so means that low mmap 
 addresses should be enabled.
 
-The chipset targetted by this tool is currently Sunrise Point (SPT, 100 series chipset).
+The chipset initially targetted by this tool is currently Sunrise Point (SPT, 100 series chipset),
+although it has since been rewritten to allow full reconfiguration of the emulated peripherals
+and interconnect.
 
 It is provided as a interoperability tool to allow development of open alternative firmwares for
 the CSME.
@@ -22,3 +24,4 @@ This tool requires a rom library dump from the ME to use.
 See https://github.com/ptresearch/IntelTXE-PoC for a means of acquiring one, though that
 will yield a ROM for a different chipset (BXT). That chipset shares most core ME peripherals
 with SPT so changing the code will mostly mean tweaking addresses.
+
