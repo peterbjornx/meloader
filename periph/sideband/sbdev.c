@@ -5,27 +5,27 @@
 #include "log.h"
 #include "sideband.h"
 
-int sbdev_count = 0;
-sideband_dev *sbdev_list[64];
+sideband_dev *sbdev_list;
 
 void sb_register( sideband_dev * periph ) {
-    sbdev_list[sbdev_count++] = periph;
+    periph->next = sbdev_list;
+    sbdev_list = periph;
 }
 
 int sb_read( int endp, int op, int bar, int address, void *buffer, int count, int sai ){
-    int i =0;
-    for ( i = 0; i < sbdev_count; i++ )
-        if ( sbdev_list[i]->endpoint == endp)
-            return sbdev_list[i]->read( bar, op, address, buffer, count, sai );
+    sideband_dev *dev;
+    for ( dev = sbdev_list; dev; dev = dev->next )
+        if ( dev->endpoint == endp)
+            return dev->read( dev, bar, op, address, buffer, count, sai );
     log( LOG_ERROR, "sideband", "Read to unknown endpoint %02X", endp );
     return -2;
 }
 
 int sb_write( int endp, int op, int bar, int address, const void *buffer, int count, int sai ){
-    int i =0;
-    for ( i = 0; i < sbdev_count; i++ )
-        if ( sbdev_list[i]->endpoint == endp)
-            return sbdev_list[i]->write( bar, op, address, buffer, count, sai );
+    sideband_dev *dev;
+    for ( dev = sbdev_list; dev; dev = dev->next )
+        if ( dev->endpoint == endp)
+            return dev->write( dev, bar, op, address, buffer, count, sai );
     log( LOG_ERROR, "sideband", "Write to unknown endpoint %02X", endp );
     return -2;
 }
