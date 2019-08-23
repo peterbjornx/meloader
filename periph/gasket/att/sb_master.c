@@ -23,27 +23,31 @@ att_sb_window *att_find_sb_win(att_inst *att, int address) {
 }
 
 int att_sb_read( att_inst *att, int addr, void *buffer, int count, int sai ) {
-    int endp, bar, base;
+    int base;
     att_sb_window *win;
     win = att_find_sb_win( att, addr );
     if ( win ) {
-        endp = win->sb_address & 0xFF;
-        bar  = (win->sb_address >> 24) & 0x7;
         base = win->window_base;
-        return sb_read( endp, bar, addr - base, buffer, count, sai );
+        return sb_read(
+                    ATT_SBADDR_ENDPT( win->sb_address ),
+                    ATT_SBADDR_RDOP( win->sb_address ),
+                    ATT_SBADDR_BAR( win->sb_address ),
+                    addr - base, buffer, count, sai );
     } else
         return -1;
 }
 
 int att_sb_write( att_inst *att, int addr, const void *buffer, int count, int sai ) {
-    int endp, bar, base;
+    int base;
     att_sb_window *win;
     win = att_find_sb_win( att, addr );
     if ( win ) {
-        endp = win->sb_address & 0xFF;
-        bar  = (win->sb_address >> 24) & 0x7;
         base = win->window_base;
-        return sb_write( endp, bar, addr - base, buffer, count, sai );
+        return sb_write(
+                        ATT_SBADDR_ENDPT( win->sb_address ),
+                        ATT_SBADDR_WROP( win->sb_address ),
+                        ATT_SBADDR_BAR( win->sb_address ),
+                        addr - base, buffer, count, sai );
     } else
         return -1;
 }

@@ -7,7 +7,10 @@
 
 #include <stdint.h>
 
-#define ATT_SBADDR_
+#define ATT_SBADDR_ENDPT(a)    ( a & 0xFFu )
+#define ATT_SBADDR_RDOP(a)     ((a >> 8u) & 0xFu)
+#define ATT_SBADDR_WROP(a)     ((a >> 16u) & 0xFu)
+#define ATT_SBADDR_BAR(a)      ((a >> 24u) & 0x7u)
 
 typedef struct __attribute__((packed)) {
     uint32_t INT_BA;
