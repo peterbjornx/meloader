@@ -10,6 +10,7 @@
 int sys_dma_lock_ex( void *par );
 int sys_dma_unlock( void *par );
 int sys_mg_synclist( void *par );
+int sys_select_receive( void *par );
 
 typedef struct {
     const char *name;
@@ -30,7 +31,11 @@ kernelcall_table kctable[] = {
             .impl = sys_mg_synclist
             },{},{},{/*8*/},
         {},{},{},{/*12*/},{},{},{},{/*16*/},
-        {},{},{},{/*20*/},{},{},{},{/*24*/},
+        {},{},{},{/*20*/},{},{},{
+            .name = "sys_select_receive",
+            .size = 108,
+            .impl = sys_select_receive
+            },{/*24*/},
         {},
         {
             .name = "sys_dma_lock_ex",
