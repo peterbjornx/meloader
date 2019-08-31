@@ -6,6 +6,7 @@
 #define MELOADER_SIDEBAND_H
 
 #include <stdint.h>
+#include "devreg.h"
 
 typedef struct sideband_dev_s sideband_dev;
 
