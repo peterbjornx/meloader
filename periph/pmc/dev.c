@@ -31,9 +31,60 @@ static int pmc_bar_read(pci_func *func, int bar, uint64_t addr, void *buffer, in
 }
 
 static int pmc_bar_write(pci_func *func, int bar, uint64_t addr, const void *buffer, int count) {
+    uint32_t val;
     pmc_inst *t = func->device->impl;
     if ( bar == 0 ) {
-        log(LOG_ERROR, t->self.name, "Write to unimplemented register %08x size %i", (uint32_t) addr, count);
+        if ( count != 4 ) {
+            log(LOG_ERROR, t->self.name, "Write to register %08x with bad size %i", (uint32_t) addr, count);
+            return t->sai;
+        }
+        val = *(uint32_t *) buffer;
+        if ( addr == 0x10 ) {
+            log(LOG_DEBUG, t->self.name, "Write PMC HESTS0: %08x", val);
+        } else if ( addr == 0x14 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC HEISIE0: %08x", val);
+        } else if ( addr == 0x18 ) {
+            log(LOG_DEBUG, t->self.name, "Write PMC HESTS1: %08x", val);
+        } else if ( addr == 0x1C )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC HEISIE1: %08x", val);
+        } else if ( addr == 0x20 )  {
+            log(LOG_ERROR, t->self.name, "Write PMC D31ID: %08x", val);
+        } else if ( addr == 0x40 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC HCSTS: %08x", val);
+        } else if ( addr == 0x44 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC HCSTS2: %08x", val);
+        } else if ( addr == 0x200 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC GENCTL: %08x", val);
+        } else if ( addr == 0x204 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC PPS: %08x", val);
+        } else if ( addr == 0x208 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC PSIENTR: %08x", val);
+        } else if ( addr == 0x20C )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC PSIEXIT: %08x", val);
+        } else if ( addr == 0x210 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC PSCTRL: %08x", val);
+        } else if ( addr == 0x218 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC IEWS: %08x", val);
+        } else if ( addr == 0x21C )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC IEWE: %08x", val);
+        } else if ( addr == 0x220 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC IEW2IE: %08x", val);
+        } else if ( addr == 0x250 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC SUSPMCFG: %08x", val);
+        } else if ( addr == 0x254 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC DSWPMCFG: %08x", val);
+        } else if ( addr == 0x260 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC RTCPMCFG: %08x", val);
+        } else if ( addr == 0x270 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC EPMMISC: %08x", val);
+        } else if ( addr == 0x300 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC GENPMCCOM: %08x", val);
+        } else if ( addr == 0x308 )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC PMCINTSTS: %08x", val);
+        } else if ( addr == 0x30C )  {
+            log(LOG_DEBUG, t->self.name, "Write PMC PMCINTEN: %08x", val);
+        } else
+            log(LOG_ERROR, t->self.name, "Write to unimplemented register %08x size %i", (uint32_t) addr, count);
         return t->sai;
     } else
         log(LOG_ERROR, t->self.name, "Write to unimplemented bar");
