@@ -18,7 +18,7 @@
 typedef struct pci_cfgspace_type0_s pci_cfgspace_type0;
 typedef union pci_cfgspace_u pci_cfgspace;
 
-struct pci_cfgspace_type0_s {
+struct __attribute__((packed))  pci_cfgspace_type0_s {
     uint16_t vid;
     uint16_t did;
     uint16_t command;
