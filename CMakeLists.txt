@@ -79,4 +79,4 @@ add_executable(meloader
         periph/gasket/att/dev.c
         include/gasket/att/regs.h
         periph/spi/dev.c
-        periph/ocs/dev.c include/ocs/dev.h include/ocs/sks.h include/ocs/hash/hash.h include/ocs/aes.h include/fastspi.h)
+        periph/ocs/dev.c include/ocs/dev.h include/ocs/sks.h include/ocs/hash/hash.h include/ocs/aes.h include/fastspi.h periph/fuse/fusectl.c include/fusectl.h user/kernel/select.c periph/pmc/dev.c include/pmc.h periph/dfxagg/dev.c include/dfxagg.h include/exi.h periph/exi/dev.c periph/gasket/heci/dev.c include/gasket/heci/heci.h periph/gasket/heci/status.c)

@@ -20,8 +20,11 @@ void tracehub_gth_read( thub_inst *t, uint32_t addr, void *buffer, int count) {
                 count);
         return;
     }
-    if ( addr == 0xE0 )
+    if ( addr == 0xE0 ) {
         *p32 = t->gth_scrpd0;
+        log(LOG_DEBUG, t->self.name, "Read SCRPD0: 0x%08x", t->gth_scrpd0);
+
+    }
     else if ( addr >= 0x8  && addr <= 0x84 ) {
         *p32 = t->gth_swdest[(addr - 8) / 4];
     }

@@ -69,6 +69,11 @@ static int pci_simple_cfg_write( pci_func *func, uint64_t addr, const void *out,
         return -1;
     }
 
+    log( LOG_TRACE,
+         func->device->name,
+         "Configuration write ( Offset: 0x%03x, Size: 0x%x )",
+         off, count );
+
     /* Copy the configuration space contents from the buffer */
     memcpy( off + (void *) &func->config, out, count );
 
