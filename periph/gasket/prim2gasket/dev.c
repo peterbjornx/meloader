@@ -14,7 +14,7 @@ static int p2g_cfg_read ( pci_func *func, uint64_t addr, void *out, int count ){
     addr &= PCI_ADDR_TYPE1_MASK;
     addr |= PCI_ADDR_TYPE1;
     for ( func = i->gasket_bus.first_func; func; func = func->next )
-        if ( func->cfg_read( func, addr, out, count ) == 0 )
+        if ( func->cfg_read && func->cfg_read( func, addr, out, count ) == 0 )
             return 0;
     return -1;
 }
@@ -24,7 +24,7 @@ static int p2g_cfg_write( pci_func *func, uint64_t addr, const void *out, int co
     addr &= PCI_ADDR_TYPE1_MASK;
     addr |= PCI_ADDR_TYPE1;
     for ( func = i->gasket_bus.first_func; func; func = func->next )
-        if ( func->cfg_write( func, addr, out, count ) == 0 )
+        if ( func->cfg_write && func->cfg_write( func, addr, out, count ) == 0 )
             return 0;
     return -1;
 }
@@ -36,9 +36,10 @@ static int p2g_mem_write( pci_func *func, uint64_t addr, const void *buf, int co
         s = pci_bus_config_write( &i->gasket_bus, addr & 0x00FFFFFFu, buf, count );
 
         return s;
-    } else
+    } else if ( addr >= 0xE0000000 )
         return pci_bus_mem_write( &i->gasket_bus, addr, buf, count, sai, 16 - lat );
-
+    else
+        return -1;
 }
 
 static int p2g_mem_read( pci_func *func, uint64_t addr,       void *buf, int count, int sai, int lat ) {
@@ -48,9 +49,24 @@ static int p2g_mem_read( pci_func *func, uint64_t addr,       void *buf, int cou
         s = pci_bus_config_read( &i->gasket_bus, addr & 0x00FFFFFFu, buf, count );
 
         return s;
-    } else
+    } else if ( addr >= 0xE0000000 )
         return pci_bus_mem_read( &i->gasket_bus, addr, buf, count, sai, 16 - lat );
+    else
+        return -1;
+}
 
+static int p2g_ret_mem_write( pci_func *func, uint64_t addr, const void *buf, int count, int sai, int lat ) {
+    p2g_inst *i = func->device->impl;
+    if ( addr < 0xE0000000 )
+        return pci_bus_mem_write( i->func.bus, addr, buf, count, sai, 16 - lat );
+    return -1;
+}
+
+static int p2g_ret_mem_read ( pci_func *func, uint64_t addr,       void *buf, int count, int sai, int lat ) {
+    p2g_inst *i = func->device->impl;
+    if ( addr < 0xE0000000 )
+        return pci_bus_mem_read( i->func.bus, addr, buf, count, sai, 16 - lat );
+    return -1;
 }
 
 static device_instance * p2g_spawn(const cfg_file *file, const cfg_section *section) {
@@ -87,6 +103,14 @@ static device_instance * p2g_spawn(const cfg_file *file, const cfg_section *sect
     i->func.mem_write = p2g_mem_write;
 
     pci_func_register( bus, &i->func );
+
+    i->ret_func.device    = &i->self;
+    i->ret_func.mem_read  = p2g_ret_mem_read;
+    i->ret_func.mem_write = p2g_ret_mem_write;
+    i->ret_func.cfg_read  = NULL;
+    i->ret_func.cfg_write = NULL;
+
+    pci_func_register( &i->gasket_bus, &i->ret_func );
 
     device_register( &i->self );
 

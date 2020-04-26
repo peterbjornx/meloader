@@ -180,6 +180,7 @@ static int att_mem_read( pci_func *func, uint64_t addr,       void *buf, int cou
 
 }
 
+void att_prim_ret_init( att_inst *i );
 
 device_instance * att_spawn(const cfg_file *file, const cfg_section *section) {
     int j;
@@ -194,12 +195,12 @@ device_instance * att_spawn(const cfg_file *file, const cfg_section *section) {
     }
     memset( i, 0, sizeof(att_inst) );
 
-    i->self.impl = i;
-    i->self.name = section->name;
-    i->func.device = &i->self;
+    i->self.impl      = i;
+    i->self.name      = section->name;
+    i->func.device    = &i->self;
     i->func.mem_read  = att_mem_read;
     i->func.mem_write = att_mem_write;
-    i->func.cfg_read = att_cfg_read;
+    i->func.cfg_read  = att_cfg_read;
     i->func.cfg_write = att_cfg_write;
 
     pci_cfg_handle_type0 ( &i->func, section, 0 );
@@ -226,6 +227,8 @@ device_instance * att_spawn(const cfg_file *file, const cfg_section *section) {
     }
 
     device_register( &i->self );
+
+    att_prim_ret_init( i );
 
     return &i->self;
 }

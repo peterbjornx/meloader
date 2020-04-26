@@ -72,7 +72,7 @@ pci_func *pci_func_find( pci_bus *bus, uint32_t bdf ) {
     pci_func *cur;
     bdf &= PCI_BDF_DF_MASK;
     for ( cur = bus->first_func; cur; cur = cur->next) {
-        if ( bdf == (cur->bdf & PCI_BDF_DF_MASK) )
+        if ( bdf == (cur->bdf & PCI_BDF_DF_MASK) && cur->cfg_read )
             break;
     }
     return cur;
@@ -84,7 +84,7 @@ pci_func *pci_func_find( pci_bus *bus, uint32_t bdf ) {
  * @param func The function to register
  */
 void pci_func_register( pci_bus *bus, pci_func *func ) {
-    if ( pci_func_find( bus, func->bdf ) ) {
+    if ( pci_func_find( bus, func->bdf ) && func->cfg_read ) {
         log(LOG_FATAL, "pci",
                 "Tried to redefine PCI function 0x%x on bus %s", func->bdf,
                 bus->name);
@@ -128,13 +128,13 @@ int pci_bus_config_read( pci_bus *bus, uint64_t addr, void *out, int count ) {
         addr &= PCI_ADDR_TYPE1_MASK;
         addr |= PCI_ADDR_TYPE1;
         for ( func = bus->first_func; func; func = func->next )
-            if ( func->cfg_read( func, addr, out, count ) == 0 )
+            if ( func->cfg_read && func->cfg_read( func, addr, out, count ) == 0 )
                 return 0;
         return -1;
     } else {
         /* Local bus, issue type 0 transaction */
         func = pci_func_find( bus, addr & PCI_ADDR_BDF_MASK );
-        if ( !func )
+        if ( !func || !func->cfg_read )
             return -1;
         addr &= PCI_ADDR_TYPE0_MASK;
         addr |= PCI_ADDR_TYPE0;
@@ -158,13 +158,13 @@ int pci_bus_config_write( pci_bus *bus, uint64_t addr, const void *out, int coun
         addr &= PCI_ADDR_TYPE1_MASK;
         addr |= PCI_ADDR_TYPE1;
         for ( func = bus->first_func; func; func = func->next )
-            if ( func->cfg_write( func, addr, out, count ) == 0 )
+            if (  func->cfg_write && func->cfg_write( func, addr, out, count ) == 0 )
                 return 0;
         return -1;
     } else {
         /* Local bus, issue type 0 transaction */
         func = pci_func_find( bus, addr & PCI_ADDR_BDF_MASK );
-        if ( !func )
+        if ( !func || !func->cfg_write  )
             return -1;
         addr &= PCI_ADDR_TYPE0_MASK;
         addr |= PCI_ADDR_TYPE0;

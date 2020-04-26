@@ -14,6 +14,7 @@ typedef struct {
     device_instance self;
     pci_bus  prim_bus;
     pci_func func;
+    pci_func ret_func;
 } att_inst;
 
 int att_sb_read(att_inst *att, int addr, void *buffer, int count, int sai );
