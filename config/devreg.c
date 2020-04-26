@@ -66,3 +66,11 @@ void initialize_devices( const cfg_file *file ) {
         type->spawn( file, section );
     }
 }
+
+void device_process() {
+    device_instance *cur;
+    for ( cur = device_list; cur; cur = cur->next) {
+        if ( cur->process )
+            cur->process( cur );
+    }
+}

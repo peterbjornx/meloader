@@ -21,6 +21,7 @@ struct device_instance_s {
     device_instance  *next;
     const char       *name;
     void             *impl;
+    void             (*process)( device_instance *inst );
 };
 
 void device_type_register( device_type *type );
@@ -33,5 +34,6 @@ void device_register( device_instance *device );
 
 device_instance *device_find( const char *name );
 
+void device_process();
 
 #endif //MELOADER_DEVREG_H
