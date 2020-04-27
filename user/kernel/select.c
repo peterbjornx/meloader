@@ -3,6 +3,8 @@
 //
 #include "log.h"
 #include <stdint.h>
+#include <unistd.h>
+
 /*
  * selrecv_str_t   struc ; (sizeof=0x6C, mappedto_31)
 00000000                                         ; XREF: srv_task/r
@@ -39,7 +41,11 @@ typedef struct __attribute__((packed)){
 
 int sys_select_receive( select_receive_par *par )
 {
-    log(LOG_DEBUG, "krnl", "sys_select_receive( bitfield0=0x%016llx, bitfield1=0x%016llx, bitfield2=0x%016llx, flags=0x%08x, timeout=%016llx )",
+    if ( par->flags == 0 && par->bitfield2 == 0 && par->bitfield1 == 0 && par->bitfield0 == 0 ) {
+        usleep( par->timeout * 1000 );
+    } else
+        log(LOG_DEBUG, "krnl", "sys_select_receive( bitfield0=0x%016llx, bitfield1=0x%016llx, bitfield2=0x%016llx, flags=0x%08x, timeout=%016llx )",
             par->bitfield0, par->bitfield1, par->bitfield2, par->flags, par->timeout);
+
     return 0;
 }
