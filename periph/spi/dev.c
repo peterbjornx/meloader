@@ -16,8 +16,11 @@ static int fastspi_bar_read(pci_func *func, int bar, uint64_t addr, void *buffer
     if ( bar == 0 ) {
         spi_read(t, addr, buffer, count);
         return t->sai;
-    } else
-        log(LOG_ERROR, t->self.name, "Read to unimplemented bar");
+    } else if ( bar == 1 ) {
+        spi_direct_read(t, addr, buffer, count);
+        return t->sai;
+    }
+    log(LOG_ERROR, t->self.name, "Read to unimplemented bar");
     return -1;
 }
 
@@ -58,6 +61,7 @@ void spi_config( fastspi_inst *spi, const cfg_section *section ) {
         snprintf(name, 40, "comp_%i_par_data_0", i);
         cfg_find_int32( section, name, &spi->spi_components[i].par_data[0] );
     }
+    spi->spi_hsflctl |= 0x4000;
     cfg_find_int32( section, "sai", &spi->sai );
 
 }

@@ -40,5 +40,6 @@ typedef struct {
 void spi_openimg( fastspi_inst *spi, const char *path );
 int spi_write( fastspi_inst *spi, int addr, const void *buffer, int count );
 int spi_read( fastspi_inst *spi, int addr, void *buffer, int count );
+int spi_direct_read( fastspi_inst *spi, int addr, void *buffer, int count );
 
 #endif //MELOADER_FASTSPI_H

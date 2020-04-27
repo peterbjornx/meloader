@@ -15,6 +15,30 @@ const char *spi_cycle_names[] = {"Read", "", "Write", "Erase4K", "Erase64K",
                                  ""};
 
 uint32_t spi_ptread( fastspi_inst *spi );
+int spi_direct_read( fastspi_inst *spi, int addr, void *buffer, int count ) {
+    int cycle, fdbc, rc, ls, i;
+    uint32_t base  = spi->spi_regions[2].base;
+    uint32_t limit = spi->spi_regions[2].limit;
+    uint32_t rda = addr + base;
+    if ( rda >= limit || (rda + count) >= limit ) {
+        log(LOG_ERROR, spi->self.name, "bad direct read with offset:%i count:%i",
+            addr, count);
+        return 1;
+    }
+    ls = lseek(spi->spi_image_file, rda, SEEK_SET);
+    if (ls == -1)
+        goto flash_err;
+    rc = read(spi->spi_image_file, buffer, count);
+    if (rc != count)
+        goto flash_err;
+    log(LOG_TRACE, spi->self.name, "direct read with offset:%x count:%x lowb: %x", rda, count, *(uint32_t*)buffer);
+    return 0;
+  flash_err:
+    log(LOG_ERROR, spi->self.name, "SPI error: %s", strerror(errno));
+    return 0;
+
+
+}
 
 int spi_read( fastspi_inst *spi, int addr, void *buffer, int count ) {
     int i;
@@ -30,6 +54,11 @@ int spi_read( fastspi_inst *spi, int addr, void *buffer, int count ) {
         return 1;
     }
     switch ( addr ) {
+        case 0x0:
+            *buf = 0;
+            *buf |= (spi->spi_regions[2].base >> 12u) & 0x7FFFu;
+            *buf |= (spi->spi_regions[2].limit << 4u) & 0x7FFF0000u;
+            break;
         case 0x4:
             *buf = spi->spi_hsflctl;
             break;
