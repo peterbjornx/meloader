@@ -44,7 +44,7 @@ void gpdma_run_transaction( gpdma_state *state ) {
         count = state->dst_size;
     pos = 0;
     log(LOG_TRACE, "gpdma", "Run transaction src:0x%08x dst:0x%08x sz:0x%08x",
-            state->src_addr, state->dst_size, count);
+            state->src_addr, state->dst_addr, count);
     while ( count ) {
         turnsize = count;
         if (turnsize > sizeof gpdma_buffer)

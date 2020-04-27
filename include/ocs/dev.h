@@ -10,6 +10,7 @@
 #include "pci/bus.h"
 #include "ocs/sks.h"
 #include "ocs/aes.h"
+#include "ocs/gp.h"
 
 typedef struct {
     uint32_t bdf;
@@ -18,6 +19,7 @@ typedef struct {
     sks_inst sks;
     ocs_hash hash;
     ocs_aes aes;
+    ocs_gp  gp;
     uint32_t sai;
 } ocs_inst;
 
