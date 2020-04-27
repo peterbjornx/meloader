@@ -49,6 +49,7 @@ void sven_load( const char *path ) {
 void sven_getfmt( char *data ) {
     const cfg_section *msg = NULL;
     const char *fmt = NULL;
+    uint32_t *idata = (uint32_t *) data;
     uint32_t id_low = *( uint32_t * ) ( data );
     uint32_t id_high = *( uint32_t * ) ( data + 4);
     mel_snprintf( buffer, 40, "msg_0x%08x%08x", id_high, id_low );
@@ -57,9 +58,9 @@ void sven_getfmt( char *data ) {
     if ( msg )
         fmt = cfg_find_string( msg, "message" );
     if ( !fmt )
-        mel_vsnprintf( sven_buffer, 640, "%08X%08X%08X", data );
+        mel_snprintf( sven_buffer, 640, "%08X%08X%08X", idata[0], idata[1], idata[2] );
     else
-        mel_vsnprintf( sven_buffer, 640, fmt, data + 8 );
+        mel_snprintf( sven_buffer, 640, fmt, idata[2], idata[3], idata[4], idata[5], idata[6] );
     print_multiline( NULL, sven_buffer );
 }
 
@@ -83,7 +84,7 @@ void sven_decode(int master, int channel, int header, int size, char *data) {
     }
 }
 
-char tbuf_data[TRACEBUF_SIZE * 4];
+char tbuf_data[TRACEBUF_SIZE * 8];
 void trace_decode() {
     int ipos;
     int dpos=0;
