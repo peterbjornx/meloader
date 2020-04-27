@@ -91,6 +91,50 @@ const char *gs1_bup_status[] = {
     "POLL_CPURST_DEASSERT_BEGIN"
 };
 
+const char *gs1_rom_status[] = {
+        "BEGIN",//0
+        "INIT_HARDWARE",//1
+        "INIT_TPM_EST",//2
+        "INIT_SUSRAM",//3
+        "GET_FUSES",//4
+        "DERIVE_UMCHID",//5
+        "DISABLE",//6
+        "INIT_HECI",//7
+        "FIND_IMAGE",
+        "MANIFEST_FOUND",
+        "LOAD_MODULE",
+        "CALL_NEXT_MODULE",
+        "FIND_FPT",
+        "FIND_CODE_PARTITION",
+        "INIT_PAGING_LOGIC",
+        "PATCH_FAILURE",
+        "HW_PAGE_FAULT",
+        "FPT_INVALID",
+        "BRUTE_FORCE_SCAN",
+        "IDLM_FOUND",
+        "PG_EXIT_START",
+        "PG_EXIT_KERNEL_LOAD"
+};
+
+const char *gs1_rom_status_high[] = {
+
+        "PROTECTED_START",    //F1
+        "PRE_PMC_HANDSHAKE",  //F2
+        "POST_PMC_HANDSHAKE", //F3
+        "FUSES_PULLED",       //F4
+        "BEFORE_SRAM_INIT",   //F5
+        "AFTER_SRAM_INIT",    //F6
+        "ROM_EARLY_F7",
+        "ROM_EARLY_F8",
+        "ROM_EARLY_F9",
+        "ROM_EARLY_FA",
+        "ROM_EARLY_FB",
+        "ROM_EARLY_FC",
+        "ROM_EARLY_FD",
+        "MIA_HALT",
+        "DO_RESET"
+};
+
 const char *gs1_modules[16] = {
         "ROM/Preboot",
         "RBE",
@@ -110,6 +154,25 @@ const char *gs1_modules[16] = {
         "15"
 };
 
+const char *gs1_pmevent[16] = {
+    "Clean Moff->Mx wake",
+    "Moff->Mx wake after an error",
+    "Clean global reset",
+    "Global reset after an error",
+    "Clean Intel ME reset",
+    "Intel ME reset due to exception",
+    "Pseudo-global reset",
+    "CM0->CM3",
+    "CM3->CM0",
+    "Non-power cycle reset",
+    "Power cycle reset through M3",
+    "Power cycle reset through Moff",
+    "Cx/Mx->Cx/Moff",
+    "CM0->CM0PG",
+    "CM3->CM3PG",
+    "CM0PG->CM0"
+};
+
 void heci_handle_gs1_change( heci_inst *i, uint32_t newval ){
     uint32_t diff = i->cse_gs1 ^ newval;
     uint32_t field, mod;
@@ -124,11 +187,15 @@ void heci_handle_gs1_change( heci_inst *i, uint32_t newval ){
         mod = (newval >> 28u) & 0xFu;
         if ( mod == 3 && field < (sizeof gs1_bup_status / sizeof(const char *)))
             log( LOG_INFO, i->self.name, "Set module progresss: %s", gs1_bup_status[field]);
+        else if ( mod == 0 && field < (sizeof gs1_rom_status / sizeof(const char *)))
+            log( LOG_INFO, i->self.name, "Set module progresss: %x %s",field, gs1_rom_status[field]);
+        else if ( mod == 0 && field >= 256-(sizeof gs1_rom_status_high / sizeof(const char *)))
+            log( LOG_INFO, i->self.name, "Set module progresss: %x %s",field, gs1_rom_status_high[field - (256 - (sizeof gs1_rom_status_high / sizeof(const char *)))]);
         else
-            log( LOG_INFO, i->self.name, "Set module progresss: %i", field);
+            log( LOG_INFO, i->self.name, "Set module progresss: %x", field);
     }
     if ( diff & (0xfu << 24u) ) {
-        log( LOG_INFO, i->self.name, "Set GS1[27 downto 24]: %i", (newval >> 24u) & 0xfu);
+        log( LOG_INFO, i->self.name, "Set PM event: %s", gs1_pmevent[(newval >> 24u) & 0xfu]);
     }
     if ( diff & (0xfu << 28u) ) {
         log( LOG_INFO, i->self.name, "Set active module: %s", gs1_modules[(newval >> 28u) & 0xfu]);
