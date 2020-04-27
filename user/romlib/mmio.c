@@ -2,10 +2,14 @@
 // Created by pbx on 03/04/19.
 //
 
+#include <sys/time.h>
 #include "user/meloader.h"
 
 long long tstamp_read(void ) {
-    return 0x7EADCAFEFEED1337LL;
+        struct timeval currentTime;
+        gettimeofday(&currentTime, NULL);
+        long long ts = currentTime.tv_sec * (long long)1e6 + currentTime.tv_usec;
+        return ts*100000;
 }
 
 void write_seg_32(int seg, int offset, int value) {
