@@ -144,6 +144,9 @@ static int ocs_mem_write( pci_func *func, uint64_t addr, const void *buf, int co
         case 0xD000:
             s = gp_write( &i->gp, addr, buf, count );
             break;
+        case 0xE000:
+            s = rsa_write( &i->rsa, addr, buf, count );
+            break;
         case 0xF000:
             s = sks_write( &i->sks, addr, buf, count );
             break;
@@ -216,6 +219,9 @@ static int ocs_mem_read( pci_func *func, uint64_t addr,       void *buf, int cou
             break;
         case 0xD000:
             s = gp_read( &i->gp, addr, buf, count );
+            break;
+        case 0xE000:
+            s = rsa_read( &i->rsa, addr, buf, count );
             break;
         case 0xF000:
             s = sks_read( &i->sks, addr, buf, count );
@@ -299,6 +305,7 @@ static device_instance * ocs_spawn(const cfg_file *file, const cfg_section *sect
     hash_init( &i->self, &i->hash );
     aes_init( &i->self, &i->aes, 'a' );
     gp_init( &i->self, &i->gp );
+    rsa_init( &i->self, &i->rsa );
 
     i->sks.hash = &i->hash;
     i->sks.hash_get_result = hash_get_result;
