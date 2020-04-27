@@ -78,7 +78,7 @@ void misa_aunit_upstream_read( misa_inst *sa, uint32_t addr,        void *buffer
         pci_bus_io_read( &sa->bus, addr, buffer, size, sa->sai, 16 );
     } else {
         int s = pci_bus_mem_read( &sa->bus, addr, buffer, size, sa->sai, 16 );
-        if ( s <= 0 || !misa_aunit_may_complete( sa, s ) ) {
+        if ( s < 0 || !misa_aunit_may_complete( sa, s ) ) {
             log( LOG_ERROR, sa->self.name, "Bus error while reading from primary bus addr %08X size %8X",
                     addr, size);
             //TODO: Do not load results here

@@ -9,24 +9,14 @@
 #include "misa/emu.h"
 #include "log.h"
 
-static int is_bunit_addr( misa_inst *sa, uint32_t addr ) {
-    return
-         ( (addr & MISA_HEC_ECBASE_MASK) !=
-         (sa->registers.hunit.HEC & MISA_HEC_ECBASE_MASK) &&
 
-         (addr & MISA_HMBOUND_HMBOUND_MASK) <
-         (sa->registers.hunit.HMBOUND & MISA_HMBOUND_HMBOUND_MASK) &&
-
-         (addr & MISA_HROMMB_ROMBASE_MASK) >=
-         (sa->registers.hunit.HROMMB) );
-}
 
 void misa_fsb_mem_write( device_instance *dev, uint32_t addr, const void *buffer, size_t size )
 {
 
     misa_inst *sa = dev->impl;
 
-    if ( is_bunit_addr( sa, addr ) ) {
+    if ( misa_is_bunit_addr( sa, addr ) ) {
         misa_bunit_upstream_write( sa, addr, buffer, size );
     } else {
         misa_aunit_upstream_write( sa, addr, buffer, size );
@@ -39,7 +29,7 @@ void misa_fsb_mem_read( device_instance *dev, uint32_t addr,       void *buffer,
 
     misa_inst *sa = dev->impl;
 
-    if ( is_bunit_addr( sa, addr ) ) {
+    if ( misa_is_bunit_addr( sa, addr ) ) {
         misa_bunit_upstream_read ( sa, addr, buffer, size );
     } else {
         misa_aunit_upstream_read ( sa, addr, buffer, size );

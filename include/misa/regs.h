@@ -1144,6 +1144,7 @@ typedef struct __attribute__((packed)) {
     uint32_t AMSIMTX[8];
     uint32_t reserved_1180[0xa0];
     misa_iommu_entry AIOM[64];
+    uint8_t reserved_1600[0x600];
 
 } misa_aunit_regs;
 
@@ -1161,10 +1162,28 @@ typedef struct __attribute__((packed)) {
     uint32_t SRAM_INIT_CFG;
     uint32_t reserved_1C34[3];
     uint32_t SRAM_INIT_LFSR_SEED[4];
-
+    uint32_t SRAM_SM_CTL;
+    uint32_t reserved_1C54;
+    uint32_t SRAM_SM_STS;
+    uint32_t reserved_1C5C;
+    uint32_t SRAM_SMC_2;
+    uint32_t reserved_1C64[3];
+    uint32_t SRAM_ECC_CTL;
+    uint32_t SRAM_ECC_POISONING;
+    uint32_t SRAM_ECC_LOG;
+    uint32_t SRAM_ECC_CNT;
+    uint32_t SRAM_ERR_LOG;
+    uint32_t SRAM_FS;
+    uint32_t reserved_1C88[2];
+    uint32_t SRAM_READ_CMD_BYPASS;
+    uint32_t reserved_1C94;
+    uint32_t SRAM_READ_CPL_BYPASS;
+    uint32_t reserved_1C9C;
+    uint32_t ROM_READ_CMD_CPL_BYPASS;
 } misa_sram_regs;
 
 typedef struct __attribute__((packed)) {
+    uint8_t reserved_000[0x400];
     misa_bunit_regs bunit;
     misa_cunit_regs cunit;
     misa_hunit_regs hunit;

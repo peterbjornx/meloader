@@ -37,7 +37,7 @@ static int is_dma_hit( pci_func *func, uint64_t addr, int *count, int sai, int l
 
     /* Subtractive decode from 16 clocks seems like a safe way of handling DMA */
     /* another option would be to check against HMBOUND */
-    return sai != sa->sai && lat >= 10;
+    return lat > 13;
 
 }
 
@@ -46,12 +46,13 @@ static int bus_mem_read( pci_func *func, uint64_t addr,       void *out, int cou
     uint32_t taddr;
     uint32_t off;
     misa_inst *sa = func->device->impl;
-    off = addr - func->config.type0.bar[0];
+    off = addr - (func->config.type0.bar[0]&~0x1FFFu);
 
     if ( is_mmio_hit( func, addr, &count ) ) {
 
         //TODO: Catch unimplemented reads
-        memcpy( out, &sa->registers + off, count );
+        memcpy( out, ((void *)&sa->registers) + off, count );
+        log(LOG_TRACE, sa->self.name, "read 0x%03x count:%i val: 0x%08x", addr, count, *(uint32_t*)out);
 
         return sa->sai;
 
@@ -69,8 +70,9 @@ static int bus_mem_read( pci_func *func, uint64_t addr,       void *out, int cou
         if ( (taddr ^ addr) & 1u )
             return -1;
 
-        misa_bunit_upstream_read( sa, addr, out, count );
+        misa_bunit_upstream_read( sa, taddr, out, count );
 
+        return sa->sai;
     }
 
     return -1;
@@ -82,12 +84,13 @@ static int bus_mem_write( pci_func *func, uint64_t addr, const void *out, int co
     uint32_t off;
     uint32_t taddr;
     misa_inst *sa = func->device->impl;
-    off = addr - func->config.type0.bar[0];
+    off = addr - (func->config.type0.bar[0]&~0x1FFFu);
 
     if ( is_mmio_hit( func, addr, &count ) ) {
 
         //TODO: Handle write permissions, catch unimplemented writes
-        memcpy( &sa->registers + off, out, count );
+        memcpy( ((void *)&sa->registers) + off, out, count );
+        log(LOG_TRACE, sa->self.name, "write 0x%03x count:%i val: 0x%08x", addr, count, *(uint32_t*)out);
 
         return 0;
 
@@ -105,7 +108,10 @@ static int bus_mem_write( pci_func *func, uint64_t addr, const void *out, int co
         if ( (taddr ^ addr) & 1u )
             return -1;
 
-        misa_bunit_upstream_write( sa, addr, out, count );
+        log(LOG_TRACE, sa->self.name, "DMA write %08x %08x %x", addr, taddr, count);
+        misa_bunit_upstream_write( sa, taddr, out, count );
+
+        return sa->sai;
 
     }
 
@@ -142,7 +148,6 @@ static int bus_cfg_read( pci_func *func, uint64_t addr,       void *out, int cou
     }
 
     //TODO: Verify config reads
-
     /* Copy the configuration space contents to the buffer */
     memcpy( out, off + (void *) &func->config, count );
 
@@ -184,8 +189,12 @@ static int bus_cfg_write( pci_func *func, uint64_t addr, const void *out, int co
 
     //TODO: Verify config writes
 
+    log(LOG_TRACE, sa->self.name, "cfg write 0x%03x count:%i val: 0x%08x", off, count, *(uint32_t*)out);
+
     /* Copy the configuration space contents from the buffer */
     memcpy( off + (void *) &func->config, out, count );
+
+    func->config.type0.command |= 0x3; //TODO: Proper support for hardwired bits
 
     /* Signal successful completion */
     return 0;
@@ -211,6 +220,10 @@ void misa_aunit_bus_target_init( misa_inst *sa, const cfg_section *section ) {
     }
     if ( cfg_find_int32( section, "bus_no", &bus_no ) < 0 || bus_no > 255) {
         log( LOG_FATAL, section->name, "Missing or invalid PCI bus number" );
+        exit( EXIT_FAILURE );
+    }
+    if ( cfg_find_int32( section, "sai", &sa->sai ) < 0 || sa->sai > 255) {
+        log( LOG_FATAL, section->name, "Missing or invalid SAI number" );
         exit( EXIT_FAILURE );
     }
 
