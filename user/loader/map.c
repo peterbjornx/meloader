@@ -211,7 +211,7 @@ me_mod *open_mod( const char *modname, int nomet ) {
 
     sprintf( path, "%s.mod", modname );
     mod->mod_file = open( path, O_RDONLY );
-    logassert( mod->mod_file >= 0, "loader", "Could not open module file: %s" );
+    logassert( mod->mod_file >= 0, "loader", "Could not open module file: %s", path );
 
     if ( !nomet ) {
         sprintf(path, "%s.met", modname);
