@@ -14,7 +14,7 @@ void fusectl_dump_addr( fusectl_inst *i ) {
     int modaddr = (i->intel_address >> 10u) & 0x3Fu;
     int blkaddr = (i->intel_address >> 7u) & 0x7u;
     int rowaddr = (i->intel_address >> 2u) & 0x1Fu;
-    log( LOG_INFO, i->self.name, "rowaddr: %02X blkaddr: %i modaddr: %02X sp_modaddrmsb: %i baraddr: %i",
+    log( LOG_TRACE, i->self.name, "rowaddr: %02X blkaddr: %i modaddr: %02X sp_modaddrmsb: %i baraddr: %i",
          rowaddr, blkaddr, modaddr, sp_modaddrmsb, baraddr );
 
 }
@@ -36,11 +36,11 @@ void fusectl_dump_fsm( fusectl_inst *i ) {
     int favor0hd = (i->intel_fsm_ctrl >> 4u) & 7u;
     int mode_sel = (i->intel_fsm_ctrl >> 1u) & 7u;
     int gblpgmen = (i->intel_fsm_ctrl >> 0u) & 1u;
-    log( LOG_INFO, i->self.name, "gblpgmen: %i mode_sel: %i hvprotect: %i fsmstart: %i fsmreset: %i repschmsel: %i",
+    log( LOG_TRACE, i->self.name, "gblpgmen: %i mode_sel: %i hvprotect: %i fsmstart: %i fsmreset: %i repschmsel: %i",
             gblpgmen, mode_sel, hvprotect, fsmstart, fsmreset, repschmsel );
-    log( LOG_INFO, i->self.name, "favor0hd: %i favor1hd: %i sensehizhd: %i senselvlbhd: %i senselvlhd: %i",
+    log( LOG_TRACE, i->self.name, "favor0hd: %i favor1hd: %i sensehizhd: %i senselvlbhd: %i senselvlhd: %i",
          favor0hd, favor1hd, sensehizhd, senselvlbhd, senselvlhd );
-    log( LOG_INFO, i->self.name, "favor0hs: %i favor1hs: %i sensehizhs: %i senselvlbhs: %i senselvlhs: %i",
+    log( LOG_TRACE, i->self.name, "favor0hs: %i favor1hs: %i sensehizhs: %i senselvlbhs: %i senselvlhs: %i",
          favor0hs, favor1hs, sensehizhs, senselvlbhs, senselvlhs );
 
 }
@@ -77,6 +77,7 @@ int fusectl_read( sideband_dev *dev, int bar, int op, int offset, void *buffer, 
         log(LOG_ERROR, dev->device->name, "Invalid sideband opcode %i in read", op);
         return -2;
     }
+    log(LOG_INFO, dev->device->name, "BAR%i offset:%08x count:%i", bar, offset, count);
     if (bar == 4) {
         if (count == 4 && offset == 0x0000) {
             *(uint32_t *) buffer = i->control;
@@ -118,12 +119,12 @@ int fusectl_read( sideband_dev *dev, int bar, int op, int offset, void *buffer, 
             int blkaddr = ( offset >> 7u ) & 0x7u;
             int wordaddr = ( offset >> 2u ) & 0x1Fu;
             *(uint32_t *) buffer = i->unknown_1024;
-            log(LOG_DEBUG, dev->device->name, "Read BAR 1 op  : blkaddr: %i wordaddr: %02X size: %i ", blkaddr, wordaddr, count );
+            log(LOG_TRACE, dev->device->name, "Read BAR 1 op  : blkaddr: %i wordaddr: %02X size: %i ", blkaddr, wordaddr, count );
         } else if (count == 4 && offset >= 0x000 && offset <= 0x3FF && (offset & 3u) == 0 ) {
             int blkaddr = ( offset >> 7u ) & 0x7u;
             int wordaddr = ( offset >> 2u ) & 0x1Fu;
             *(uint32_t *) buffer = i->unknown_1024;
-            log(LOG_DEBUG, dev->device->name, "Read BAR 1 base: blkaddr: %i wordaddr: %02X size: %i ", blkaddr, wordaddr, count );
+            log(LOG_TRACE, dev->device->name, "Read BAR 1 base: blkaddr: %i wordaddr: %02X size: %i ", blkaddr, wordaddr, count );
         } else {
             log(LOG_ERROR, dev->device->name, "Try read BAR 1 offset %X size %i", offset, count);
             return -2;
@@ -142,6 +143,7 @@ int fusectl_write( sideband_dev *dev, int bar, int op, int offset, const void *b
         log( LOG_ERROR, dev->device->name, "Invalid sideband opcode %i in write", op );
         return -2;
     }
+    log(LOG_TRACE, dev->device->name, "BAR%i offset:%08x count:%i data:%08x", bar, offset, count, *(uint32_t*)buffer);
     if ( bar == 4 ) {
         if ( count == 4 && offset == 0x0000 ) {
             i->control = *(uint32_t *) buffer;
