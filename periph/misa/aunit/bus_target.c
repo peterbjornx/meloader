@@ -108,7 +108,7 @@ static int bus_mem_write( pci_func *func, uint64_t addr, const void *out, int co
         if ( (taddr ^ addr) & 1u )
             return -1;
 
-        log(LOG_TRACE, sa->self.name, "DMA write %08x %08x %x", addr, taddr, count);
+        //log(LOG_TRACE, sa->self.name, "DMA write %08x %08x %x", addr, taddr, count);
         misa_bunit_upstream_write( sa, taddr, out, count );
 
         return sa->sai;
