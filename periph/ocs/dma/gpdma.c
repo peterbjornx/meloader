@@ -20,6 +20,8 @@ int gpdma_read( gpdma_state *state, int addr, void *buffer, int count ) {
         *buf = state->src_size;
     else if ( addr == GPDMA_REG_DST_SIZE )
         *buf = state->dst_size;
+    else if ( addr == GPDMA_REG_RES )
+        *buf = 0;
     else if ( addr == GPDMA_REG_CONTROL ) {
         *buf = state->control;
         log(LOG_TRACE, "gpdma", "read control: 0x%08x", *buf);
@@ -39,12 +41,13 @@ void gpdma_run_transaction( gpdma_state *state ) {
     if ( ~state->control & (1 << 31) )
         return;
     state->control &= ~(1 << 31);
+    state->status = 0xc000;
     count = state->src_size;
     if ( state->dst_size > count )
         count = state->dst_size;
     pos = 0;
-    log(LOG_TRACE, "gpdma", "Run transaction src:0x%08x dst:0x%08x sz:0x%08x",
-            state->src_addr, state->dst_addr, count);
+    log(LOG_DEBUG, "gpdma", "Run transaction src:0x%08x dst:0x%08x sz:0x%08x ctrl:%08X",
+            state->src_addr, state->dst_addr, count, state->control);
     while ( count ) {
         turnsize = count;
         if (turnsize > sizeof gpdma_buffer)
@@ -56,7 +59,8 @@ void gpdma_run_transaction( gpdma_state *state ) {
         }
         if ( state->dst_addr ) {
             state->bus_write(state->bus_impl, state->dst_addr + pos, gpdma_buffer, (size_t) turnsize);
-        } else {
+        }
+        if ( ~state->control & 0x40000000 ){
             state->int_write(state->impl, gpdma_buffer, (uint32_t) turnsize);
         }
         pos += turnsize;
@@ -82,13 +86,15 @@ int gpdma_write( gpdma_state *state, int addr, const void *buffer, int count ) {
         state->src_size = *buf;
     else if ( addr == GPDMA_REG_DST_SIZE )
         state->dst_size = *buf;
+    else if ( addr == GPDMA_REG_RES ) {
+        log(LOG_DEBUG, "gpdma", "write RES = %08X", addr, *buf);}
     else if ( addr == GPDMA_REG_CONTROL ) {
         state->control = *buf;
         //mel_printf("[gdma] write control: 0x%08x", *buf);
     } else if ( addr == GPDMA_REG_STATUS )
         state->status = *buf;
     else
-        log(LOG_ERROR, "gpdma", "read  0x%03x count:%i", addr, count);
+        log(LOG_ERROR, "gpdma", "write 0x%03x count:%i", addr, count);
     gpdma_run_transaction( state );
     return 1;
 }
