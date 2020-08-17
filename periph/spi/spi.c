@@ -15,26 +15,193 @@ const char *spi_cycle_names[] = {"Read", "", "Write", "Erase4K", "Erase64K",
                                  ""};
 
 uint32_t spi_ptread( fastspi_inst *spi );
-int spi_direct_read( fastspi_inst *spi, int addr, void *buffer, int count ) {
-    int cycle, fdbc, rc, ls, i;
-    uint32_t base  = spi->spi_regions[2].base;
-    uint32_t limit = spi->spi_regions[2].limit;
-    uint32_t rda = addr + base;
-    if ( rda >= limit || (rda + count) >= limit ) {
-        log(LOG_ERROR, spi->self.name, "bad direct read with offset:%i count:%i",
-            addr, count);
+
+uint8_t spi_cacheread_hdblk( fastspi_inst *spi, int pos ) {
+    uint32_t cache_start = pos & ~(SPI_HDBLK_CACHE_SIZE - 1u);
+    uint32_t cache_index = pos & (SPI_HDBLK_CACHE_SIZE - 1u);
+    if ( cache_start == spi->cached_hdblk_base )
+        return spi->cached_hdblk[ cache_index ];
+
+    spi->cached_hdblk_base = cache_start;
+
+    spi_read_csme( spi, cache_start,
+                   SPI_HDBLK_CACHE_SIZE,
+                   spi->cached_hdblk ); //TODO: Handle errors
+
+    return spi->cached_hdblk[ cache_index ];
+}
+
+void spi_cache_hdlut( fastspi_inst *spi ) {
+    uint32_t csxefctrl = *(uint32_t *)(spi->func.func.config.bytes + 0x80);
+    uint32_t hd_lutb = csxefctrl & 0x07FFFFC0u;
+    uint32_t hd_compoff = spi->spi_hdcompoff;
+    uint32_t guessed_size;
+
+    guessed_size = hd_compoff - hd_lutb;
+
+    if ( hd_compoff <= hd_lutb ) {
+        /* Compressed data starts before header */
+
+        /* We can NOT guess the LUT size in this situation */
+        log( LOG_WARN, spi->self.name, "huffman LUT guess failed, HDLUTB: %08X"
+                                       " HDCOMPOFF: %08X",
+                hd_lutb, hd_compoff );
+        guessed_size = SPI_HDLUT_CACHE_SIZE;
+    } else if ( guessed_size > SPI_HDLUT_CACHE_SIZE ) {
+        log( LOG_WARN, spi->self.name,
+             "huffman LUT size larger than cache: 0x%08",
+             guessed_size );
+        guessed_size = SPI_HDLUT_CACHE_SIZE;
+    }
+
+    /* Determined size, now proceed to load HDLUT to cache */
+
+    guessed_size /= sizeof( uint32_t );
+
+    /* Check if the right value is already cached */
+    if ( spi->cached_hdlut_base == hd_lutb &&
+         spi->cached_hdlut_size >= guessed_size )
+        return;
+
+    spi->cached_hdlut_base = hd_lutb;
+    spi->cached_hdlut_size = guessed_size;
+
+    spi_read_csme( spi, hd_lutb,
+            guessed_size * sizeof( uint32_t),
+            spi->cached_hdlut ); //TODO: Handle errors
+
+}
+
+#define SPI_CSXE_FCTRL_HDEN (0x10u)
+#define SPI_CSXE_FCTRL_PAGESZ (0x10u)
+
+extern huff_map_t huff11_map[0x8000][2];
+int trig=0;
+void fakepage(char *out) {
+    memset(out,0x0,0x1000);
+    memcpy(out + 0x606, "\xB8\x42\x42\x37\x13\xA3\x18\x00\x08\xF0\xF4\xEB\xFD",14);
+}
+
+int spi_huffman_read_page( fastspi_inst *spi, int page, void *page_base ) {
+    uint32_t hd_compoff = spi->spi_hdcompoff;
+    uint32_t csxefctrl = *(uint32_t *)(spi->func.func.config.bytes + 0x80);
+    uint32_t hd_limit  = *(uint32_t *)(spi->func.func.config.bytes + 0x84) & ~0xFFFu;
+    uint32_t blk_start, blk_flags;
+    uint32_t page_sz = 1024;
+
+    /* Determine page size */
+    if ( csxefctrl & SPI_CSXE_FCTRL_PAGESZ )
+        page_sz = 4096;
+    if ( trig && page == 0x9 && hd_compoff == 0x708C) {
+        if ( trig != 2 ) {
+            log(LOG_WARN,spi->self.name,"Hot-replacing block with shellcode: addr:%08X, page:%X!\n",hd_compoff,page);
+            trig = 2;
+        }
+        fakepage(page_base);
         return 1;
     }
-    ls = lseek(spi->spi_image_file, rda, SEEK_SET);
-    if (ls == -1)
-        goto flash_err;
-    rc = read(spi->spi_image_file, buffer, count);
-    if (rc != count)
-        goto flash_err;
-    log(LOG_TRACE, spi->self.name, "direct read with offset:%x count:%x lowb: %x", rda, count, *(uint32_t*)buffer);
-    return 0;
-  flash_err:
-    log(LOG_ERROR, spi->self.name, "SPI error: %s", strerror(errno));
+    //log(LOG_TRACE,spi->self.name,"huff addr:%08X, page:%X",hd_compoff,page);
+
+    blk_start = spi->cached_hdlut[ page ] & 0x1FFFFFFu;
+    blk_flags = (spi->cached_hdlut[ page ] >> 30u) & 0x2u;
+    uint32_t bit_buffer = 0, available_bits = 0;
+    uint32_t cmprpos = blk_start + hd_compoff;
+
+    for ( int i = 0; i < page_sz;  ) {
+        while ( available_bits <= 24  /* check for limit ? */ ) {
+            bit_buffer |= spi_cacheread_hdblk( spi, cmprpos++ ) << ( 24u - available_bits );
+            available_bits += 8;
+        }
+
+        uint32_t codeword = bit_buffer >> ( 32u - 15u );
+        huff_map_t *map = &huff11_map[codeword & 0x7FFFu][blk_flags/2];
+
+        bit_buffer     <<= map->cs;
+        available_bits -=  map->cs;
+
+        uint32_t symbol_size = map->sz;
+        if ( i + symbol_size > page_sz ) {
+            log( LOG_ERROR, spi->self.name,
+                 "huffmann result overflowed buffer" );
+            return 0;
+        }
+        memcpy( page_base + i, map->arr, symbol_size );
+        i += symbol_size;
+    }
+
+    return 1;
+}
+int spi_huffmann_read( fastspi_inst *spi, int addr, void *buffer, int count ) {
+    uint32_t csxefctrl = *(uint32_t *)(spi->func.func.config.bytes + 0x80);
+    uint32_t hd_limit  = *(uint32_t *)(spi->func.func.config.bytes + 0x84) & ~0xFFFu;
+    uint32_t page_sz = 1024, page, start_page, end_page;
+    uint32_t end_addr, start_off, end_off, p_off, p_sz, pos;
+    int st;
+
+    /* Ensure hardware huffman decode is enabled */
+    if ( ~csxefctrl & SPI_CSXE_FCTRL_HDEN ) {
+        log( LOG_ERROR, spi->self.name, "huffmann read while HDEN unset" );
+        goto hd_fail;
+    }
+
+    /* Determine page size */
+    if ( csxefctrl & SPI_CSXE_FCTRL_PAGESZ )
+        page_sz = 4096;
+
+    /* Perform bounds check on the address */
+    if ( addr + count >= hd_limit ) {
+        log( LOG_ERROR, spi->self.name, "huffmann read beyond bounds: %08X to %08X",
+                addr, addr+count );
+        goto hd_fail;
+    }
+    /* Acquire the lookup table */
+    spi_cache_hdlut( spi );
+
+    end_addr = addr + count;
+
+    start_page = addr / page_sz;
+    start_off  = addr % page_sz;
+    end_page   = (end_addr + page_sz - 1) / page_sz;
+    end_off    = end_addr % page_sz;
+    if ( end_off == 0 )
+        end_off = page_sz;
+
+    /* Perform bounds check against cached LUT size */
+    if ( end_page > spi->cached_hdlut_size ) {
+        log( LOG_ERROR, spi->self.name, "huffmann read beyond LUT bounds: %08X to %08X",
+             addr, addr+count );
+        goto hd_fail;
+    }
+
+    p_off = start_off;
+
+    for ( page = start_page, pos = 0;
+          page < end_page;
+          page++, p_off = 0, pos+=p_sz ) {
+
+        p_sz = count - pos;
+
+        if ( p_sz > page_sz - p_off )
+            p_sz = page_sz - p_off;
+
+           if ( p_off || p_sz != page_sz ) {
+               st = spi_huffman_read_page( spi, page, spi->page_buf );
+               memcpy( buffer + pos, spi->page_buf + p_off, p_sz );
+           } else
+               st = spi_huffman_read_page( spi, page, buffer + pos );
+           if (!st)
+               goto hd_fail;
+    }
+
+
+    return 1;
+  hd_fail:
+    memset( buffer, 0xFF, count );
+    return 1;
+}
+
+int spi_direct_read( fastspi_inst *spi, int addr, void *buffer, int count ) {
+    spi_read_csme( spi, addr, count, buffer );
     return 0;
 
 
@@ -104,6 +271,9 @@ int spi_read( fastspi_inst *spi, int addr, void *buffer, int count ) {
         case 0xD0:
             *buf = spi_ptread(spi);
                     break;
+        case 0xD8:
+            *buf = spi->spi_hdcompoff;
+            break;
         default:
             log(LOG_ERROR, spi->self.name, "unknown reg read  0x%03x count:%i", addr, count);
             break;
@@ -194,8 +364,11 @@ int spi_write( fastspi_inst *spi, int addr, const void *buffer, int count ) {
         case 0xCC:
             spi->spi_ptinx = *buf;
             break;
+        case 0xD8:
+            spi->spi_hdcompoff = *buf;
+            break;
         default:
-            log(LOG_TRACE, spi->self.name, "write 0x%03x count:%i %x", addr, count, *buf);
+            log(LOG_WARN, spi->self.name, "write 0x%03x count:%i %x", addr, count, *buf);
             break;
     }
     spi_do_hwseq( spi );
@@ -274,4 +447,34 @@ void spi_openimg( fastspi_inst *spi, const char *path ) {
         exit(255);
     }
     //TODO: Read Flash Descriptor
+}
+
+int spi_read_csme( fastspi_inst *spi, int start, int count, void *buffer ) {
+    //TODO: Support BRS
+    uint32_t base  = spi->spi_regions[2].base;
+    uint32_t limit = spi->spi_regions[2].limit;
+    uint32_t rda = start + base;
+    if ( rda >= limit || (rda + count) >= limit ) {
+        log(LOG_ERROR, spi->self.name,
+                "Out of bounds read to CSME region with offset:%i count:%i",
+                 start, count);
+        return 0;
+    }
+    return spi_readimg( spi, rda, count, buffer );
+
+}
+
+int spi_readimg( fastspi_inst *spi, int start, int count, void *buffer ) {
+    off_t ls; ssize_t rc;
+    ls = lseek(spi->spi_image_file, start, SEEK_SET);
+    if (ls == -1)
+        goto flash_err;
+    rc = read(spi->spi_image_file, buffer, count);
+    if (rc != count)
+        goto flash_err;
+    return 1;
+flash_err:
+    log(LOG_ERROR, spi->self.name, "SPI error: %s", strerror(errno));
+    return 0;
+
 }

@@ -19,6 +19,9 @@ static int fastspi_bar_read(pci_func *func, int bar, uint64_t addr, void *buffer
     } else if ( bar == 1 ) {
         spi_direct_read(t, addr, buffer, count);
         return t->sai;
+    } else if ( bar == 2 ) {
+        spi_huffmann_read(t, addr, buffer, count);
+        return t->sai;
     }
     log(LOG_ERROR, t->self.name, "Read to unimplemented bar");
     return -1;
