@@ -10,14 +10,28 @@
 #include "log.h"
 #include <stdio.h>
 #include <pmc.h>
+#include <hwif.h>
 
 static int pmc_bar_read(pci_func *func, int bar, uint64_t addr, void *buffer, int count) {
     pmc_inst *t = func->device->impl;
+    /*if ( 1 == 1 ) {
+        hwif_mm_read(func->config.type0.bar[bar] + addr, buffer, count);
+        return t->sai;
+    }*/
     if ( bar == 0 ) {
+
+        //pmc218 = 0x8000002 pmc_204 = 0x10000
         if ( addr == 0x020 && count == 4 ) {
             *(uint32_t *)buffer = t->d31id;
         } else if ( addr == 0x310 && count == 4 ) {
             *(uint32_t *)buffer = 0x8;
+        } else if ( addr == 0x218 && count == 4 ) {
+            *(uint32_t *)buffer = 0x8000002;
+        } else if ( addr == 0x204 && count == 4 ) {
+            *(uint32_t *)buffer = t->pps | 0x10000u;
+        } else if ( addr == 0x18 && count == 4 ) {
+          *(uint32_t *)buffer = 0x0;
+
         } else
             log(LOG_ERROR, t->self.name, "Read to unimplemented register %08x size %i", (uint32_t) addr, count);
         return t->sai;
@@ -33,6 +47,10 @@ static int pmc_bar_read(pci_func *func, int bar, uint64_t addr, void *buffer, in
 static int pmc_bar_write(pci_func *func, int bar, uint64_t addr, const void *buffer, int count) {
     uint32_t val;
     pmc_inst *t = func->device->impl;
+    /*if ( 1 == 1 ) {
+        hwif_mm_write(func->config.type0.bar[bar] + addr, buffer, count);
+        return t->sai;
+    }*/
     if ( bar == 0 ) {
         if ( count != 4 ) {
             log(LOG_ERROR, t->self.name, "Write to register %08x with bad size %i", (uint32_t) addr, count);
@@ -63,6 +81,10 @@ static int pmc_bar_write(pci_func *func, int bar, uint64_t addr, const void *buf
             log(LOG_DEBUG, t->self.name, "Write PMC PSIEXIT: %08x", val);
         } else if ( addr == 0x210 )  {
             log(LOG_DEBUG, t->self.name, "Write PMC PSCTRL: %08x", val);
+            if ( val & 1u ) {
+                log(LOG_INFO, t->self.name, "Request handshake");
+                t->pps |= 0x200;
+            }
         } else if ( addr == 0x218 )  {
             log(LOG_DEBUG, t->self.name, "Write PMC IEWS: %08x", val);
         } else if ( addr == 0x21C )  {
@@ -105,7 +127,7 @@ static device_instance * pmc_spawn(const cfg_file *file, const cfg_section *sect
         exit(EXIT_FAILURE);
     }
     memset( i, 0, sizeof(pmc_inst) );
-
+    //hwif_connect("127.0.0.1",4284);
     i->self.impl = i;
     i->self.name = section->name;
     i->func.bar_size[0] = 0x00002000;

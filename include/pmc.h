@@ -12,6 +12,7 @@ typedef struct {
     pci_simplefunc func;
     uint32_t sai;
     uint32_t d31id;
+    uint32_t pps;
 } pmc_inst;
 
 #endif //MELOADER_PMC_H
