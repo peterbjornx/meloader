@@ -104,9 +104,11 @@ void sks_do_operation( sks_inst *sks ) {
     } else {
         switch( sks->sks_command & SKS_CMD_TARGET_MASK ) {
             case SKS_CMD_TARGET_HASH:
+                log(LOG_INFO, sks->name, "SKS load key %i to SHA!",sks->sks_slot);
                 sks->hash_load_key( sks->hash, sks->sks_keys[sks->sks_slot].key_data, keysize );
                 break;
             case SKS_CMD_TARGET_AES:
+                log(LOG_INFO, sks->name, "SKS load key %i to AES!",sks->sks_slot);
                 sks->aes_load_key( sks->aes, sks->sks_keys[sks->sks_slot].key_data, keysize );
                 break;
             default:

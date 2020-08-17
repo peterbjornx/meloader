@@ -7,6 +7,7 @@
 #define GPDMA_REG_SRC_SIZE  (0x408)
 #define GPDMA_REG_DST_SIZE  (0x40C)
 #define GPDMA_REG_CONTROL   (0x410)
+#define GPDMA_REG_RES       (0x414)
 #define GPDMA_REG_STATUS    (0x428)
 
 

@@ -138,6 +138,9 @@ static int ocs_mem_write( pci_func *func, uint64_t addr, const void *buf, int co
         case 0x8000:
             s = aes_write( &i->aes, addr, buf, count );
             break;
+        case 0xA000:
+            s = aes_write( &i->aes2, addr, buf, count );
+            break;
         case 0xB000:
             s = hash_write( &i->hash, addr, buf, count );
             break;
@@ -213,6 +216,9 @@ static int ocs_mem_read( pci_func *func, uint64_t addr,       void *buf, int cou
     switch ( unit ) {
         case 0x8000:
             s = aes_read( &i->aes, addr, buf, count );
+            break;
+        case 0xA000:
+            s = aes_read( &i->aes2, addr, buf, count );
             break;
         case 0xB000:
             s = hash_read( &i->hash, addr, buf, count );
@@ -304,6 +310,7 @@ static device_instance * ocs_spawn(const cfg_file *file, const cfg_section *sect
     sks_init( &i->self, &i->sks );
     hash_init( &i->self, &i->hash );
     aes_init( &i->self, &i->aes, 'a' );
+    aes_init( &i->self, &i->aes2, 'b' );
     gp_init( &i->self, &i->gp );
     rsa_init( &i->self, &i->rsa );
 
@@ -318,6 +325,9 @@ static device_instance * ocs_spawn(const cfg_file *file, const cfg_section *sect
     i->aes.aes_gpdma.bus_impl = i;
     i->aes.aes_gpdma.bus_read = ocs_dma_read;
     i->aes.aes_gpdma.bus_write = ocs_dma_write;
+    i->aes2.aes_gpdma.bus_impl = i;
+    i->aes2.aes_gpdma.bus_read = ocs_dma_read;
+    i->aes2.aes_gpdma.bus_write = ocs_dma_write;
     i->gp.gp_gpdma.bus_impl = i;
     i->gp.gp_gpdma.bus_read = ocs_dma_read;
     i->gp.gp_gpdma.bus_write = ocs_dma_write;
