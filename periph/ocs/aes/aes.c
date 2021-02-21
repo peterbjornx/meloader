@@ -17,7 +17,7 @@ int aes_read( ocs_aes *a, int addr, void *buffer, int count ) {
     if ( addr == 0x05c)
         *buf = 2;
     else if ( addr == 0x040)
-        *buf = trig==2;
+        *buf = trig==2  ;
     if ( !gpdma_read( &a->aes_gpdma, addr, buffer, count) )
         log(LOG_TRACE, a->name, "read  unknown 0x%03x count:%i val: 0x%08x", addr, count, *buf);
     return 1;

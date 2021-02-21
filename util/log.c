@@ -9,12 +9,12 @@
 
 char log_buffer[1024];
 
-int log_level = LOG_DEBUG;
+int log_level = LOG_TRACE;
 
 const char *level_names[]
     = {"TRACE", "DEBUG", "INFO ", "WARN ", "ERROR", "FATAL", "METRC"};
 
-static void vlog( int level, const char *module, const char *format, va_list list ) {
+void vlog( int level, const char *module, const char *format, va_list list ) {
 
     if ( level >= log_level ) {
 

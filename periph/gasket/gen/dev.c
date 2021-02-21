@@ -20,7 +20,7 @@ static int gen_bar_read(pci_func *func, int bar, uint64_t addr, void *buffer, in
         }
         switch ( addr ) {
             case 0x100:
-                *val = 0; //TODO: Derive this from command reg (this is probably a RUN/BUSY bit)
+                *val = 0x100000; //TODO: Derive this from command reg (this is probably a RUN/BUSY bit)
                 log(LOG_INFO, t->self.name, "Read to register GEN_100: %08x", *(uint32_t *)buffer);
                 break;
             case 0x104:
@@ -56,7 +56,7 @@ static int gen_bar_read(pci_func *func, int bar, uint64_t addr, void *buffer, in
         }
         switch ( addr ) {
             case 0x50:
-                *val = 9;
+                *val = 0x29;
                 log(LOG_INFO, t->self.name, "Read to register GEN_1050: %08x", *(uint32_t *)buffer);
                 break;
             default:

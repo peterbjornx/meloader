@@ -102,7 +102,7 @@ add_executable(meloader
         include/gasket/enclave/enclave.h
         periph/susram/dev.c
         include/susram.h
-        periph/misa/sram.c periph/misa/rom.c util/hwif.c include/hwif.h periph/gasket/gen/dev.c include/gasket/gen/dev.h periph/smt/dev.c include/smt.h periph/ocs/dma/gp_unit.c include/ocs/gp.h include/gasket/timer/apptimer.h periph/gasket/timer/apptimer.c periph/ocs/rsa/rsa.c include/ocs/rsa.h)
+        periph/misa/sram.c periph/misa/rom.c util/hwif.c include/hwif.h periph/gasket/gen/dev.c include/gasket/gen/dev.h periph/smt/dev.c include/smt.h periph/ocs/dma/gp_unit.c include/ocs/gp.h include/gasket/timer/apptimer.h periph/gasket/timer/apptimer.c periph/ocs/rsa/rsa.c include/ocs/rsa.h include/data/huffman11.c periph/drng/dev.c)
 
 set_target_properties(meloader PROPERTIES COMPILE_FLAGS "-m32")
 
@@ -200,6 +200,6 @@ add_executable(pchemu
         include/gasket/timer/apptimer.h
         periph/gasket/timer/apptimer.c
         periph/ocs/rsa/rsa.c
-        include/ocs/rsa.h)
+        include/ocs/rsa.h include/data/huffman11.c periph/drng/dev.c)
 
 target_link_libraries(pchemu ia32 gmp)

@@ -13,7 +13,7 @@ const char *mipi_tmsg_types[] = {
         "MERR"
 };
 
-#define TRACEBUF_SIZE 64
+#define TRACEBUF_SIZE 4096
 
 int tbuf_master = -1;
 int tbuf_channel = -1;
@@ -45,13 +45,17 @@ static char sven_buffer[640];
 void sven_load( const char *path ) {
     sven_file = load_config( path );
 }
-
+extern int trig;
 void sven_getfmt( char *data ) {
     const cfg_section *msg = NULL;
     const char *fmt = NULL;
     uint32_t *idata = (uint32_t *) data;
     uint32_t id_low = *( uint32_t * ) ( data );
     uint32_t id_high = *( uint32_t * ) ( data + 4);
+    if ( id_low == 0x30400 ) {
+        trig = 1;
+        log(LOG_WARN,"toctou","Trigger seen!");
+    }
     mel_snprintf( buffer, 40, "msg_0x%08x%08x", id_high, id_low );
     if ( sven_file )
         msg = cfg_find_section( sven_file, buffer );
@@ -137,13 +141,12 @@ void trace_decode() {
 void trace_msg(int master, int chan, struct th_msg msg) {
 
     if (tbuf_pos > TRACEBUF_SIZE) {
-        mel_printf("[mipi] Trace buffer overflow, dropping packet!");
+        log(LOG_ERROR, "mipi", "Trace buffer overflow, dropping packet!");
         return;
     }
     if (tbuf_master != master || tbuf_channel != chan) {
         if (tbuf_master != -1)
-            mel_printf(
-                    "[mipi] Dropping trace buffer because of interleaved masters");
+            log(LOG_ERROR, "mipi", "Dropping trace buffer because of interleaved masters");
         tbuf_pos = 0;
         tbuf_master = master;
         tbuf_channel = chan;

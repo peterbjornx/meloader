@@ -12,12 +12,15 @@
 #include "devreg.h"
 #include "log.h"
 #include <stdio.h>
+#include <hwif.h>
 #include "gasket/heci/heci.h"
 
 static int heci_bar_read(pci_func *func, int bar, uint64_t addr, void *buffer, int count) {
     heci_inst *t = func->device->impl;
     uint32_t *val;
     if ( bar == 0 ) {
+        /*hwif_mm_read(func->config.type0.bar[bar] + addr, buffer, count);
+        return t->sai;*/
         if ( count != 4 ) {
             log(LOG_ERROR, t->self.name, "Read to register %08x with bad size %i", (uint32_t) addr, count);
             return t->sai;
@@ -62,10 +65,11 @@ static int heci_bar_write(pci_func *func, int bar, uint64_t addr, const void *bu
     uint32_t val;
     heci_inst *t = func->device->impl;
     if ( bar == 0 ) {
+        /*hwif_mm_write(func->config.type0.bar[bar] + addr, buffer, count);
         if ( count != 4 ) {
             log(LOG_ERROR, t->self.name, "Write to register %08x with bad size %i", (uint32_t) addr, count);
             return t->sai;
-        }
+        }*/
         val = *(uint32_t *) buffer;
         if ( addr == 0x4 ) {
             log(LOG_TRACE, t->self.name, "Write FS: %08x", val);
